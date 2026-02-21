@@ -1,26 +1,29 @@
-package co.assets.manage.domain;
+package co.assets.manage.domain.model;
 
-import co.assets.manage.domain.complex.AssetTageMultiKey;
+import co.assets.manage.domain.BaseDomain;
 import co.assets.manage.enums.TagSourceEnum;
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 import org.hibernate.annotations.Comment;
 
-import java.time.LocalDateTime;
-
-@Entity
+@Getter
+@Setter
+@ToString
+@NoArgsConstructor
+@Entity(name = "asset_tag")
 @Table(name = "asset_tag", indexes = {
         @Index(name = "idx_asset_tag_id", columnList = "asset_id, tag_id")
 })
 @Comment("アセットとタグの関連付けテーブル")
-@IdClass(AssetTageMultiKey.class)
-public class AssetTagDO {
+public class AssetTagDO extends BaseDomain {
 
-    @Id
     @Column(name = "asset_id", nullable = false)
     @Comment("アセットID")
     private Long assetId;
 
-    @Id
     @Column(name = "tag_id", nullable = false)
     @Comment("タグID")
     private Long tagId;
@@ -34,7 +37,4 @@ public class AssetTagDO {
     @Comment("AIタグの信頼度（0.0～1.0）")
     private Double confidenceScore;
 
-    @Column(name = "create_time")
-    @Comment("作成日時")
-    private LocalDateTime createTime;
 }

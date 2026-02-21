@@ -1,0 +1,26 @@
+package co.assets.manage.infrastructure.event;
+
+import co.assets.manage.domain.event.AssetTagEvent;
+import co.assets.manage.service.ITagService;
+import co.assets.manage.utils.JsonUtil;
+import jakarta.annotation.Resource;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Component;
+
+@Slf4j
+@Component
+public class AssetTagEventConsumer {
+
+    @Resource
+    private ITagService tagService;
+
+    @EventListener(value = AssetTagEvent.class)
+    @Async
+    public void createAsset(AssetTagEvent event) {
+        log.info("接收到创建Asset事件:{}", JsonUtil.toJson(event));
+
+        tagService.addTag(event.getAssetId(), event.getFilePath());
+    }
+}

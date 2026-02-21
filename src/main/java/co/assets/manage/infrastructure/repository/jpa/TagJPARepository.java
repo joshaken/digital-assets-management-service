@@ -1,0 +1,17 @@
+package co.assets.manage.infrastructure.repository.jpa;
+
+import co.assets.manage.domain.model.TagDO;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+
+@Repository
+public interface TagJPARepository extends JpaRepository<TagDO, Long>, JpaSpecificationExecutor<TagDO> {
+
+    @Query(value = "select tag from tag where deleted= :deleted")
+    List<TagDO> findByDeleted(@Param("deleted") Boolean deleted);
+}

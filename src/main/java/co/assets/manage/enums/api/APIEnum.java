@@ -1,6 +1,5 @@
 package co.assets.manage.enums.api;
 
-import co.assets.manage.enums.IResultMsg;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 

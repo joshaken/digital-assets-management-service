@@ -1,4 +1,4 @@
-package co.assets.manage.enums;
+package co.assets.manage.enums.api;
 
 import java.io.Serializable;
 

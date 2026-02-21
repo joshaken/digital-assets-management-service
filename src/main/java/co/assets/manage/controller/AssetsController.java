@@ -1,18 +1,26 @@
 package co.assets.manage.controller;
 
+import co.assets.manage.domain.model.AssetDO;
 import co.assets.manage.dto.Result;
 import co.assets.manage.dto.req.CreateAssetRequest;
 import co.assets.manage.dto.req.QueryAssetRequest;
 import co.assets.manage.dto.resp.PageResult;
 import co.assets.manage.dto.resp.QueryAssetResponse;
+import co.assets.manage.utils.converter.AssetConverter;
+import co.assets.manage.service.IAssetService;
+import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 @Slf4j
 @RestController
 @RequestMapping("/api")
-public class AssetsController {
+public class AssetsController extends BaseController {
+
+    @Resource
+    private IAssetService assetService;
 
     /**
      * アセット登録
@@ -22,9 +30,15 @@ public class AssetsController {
      */
     @PostMapping("/assets")
     public Result<Void> create(@Validated @RequestBody CreateAssetRequest createAssetRequest) {
-
+        //从当前用户token中获取企业ID，保证数据不混乱
+        log.info("api/assets request{}", createAssetRequest);
+        AssetDO assetDO = AssetConverter.INSTANCE.reqTransToDO(createAssetRequest);
+        Long enterpriseId = getCurrentEnterpriseId();
+        assetDO.setEnterpriseId(enterpriseId);
+        assetService.create(assetDO);
         return Result.ok();
     }
+
 
     /**
      * タグ検索
@@ -34,8 +48,18 @@ public class AssetsController {
      */
     @GetMapping("/assets/search")
     public Result<PageResult<QueryAssetResponse>> search(QueryAssetRequest queryAssetRequest) {
-
-        return Result.ok();
+        log.info("api/assets/search request{}", queryAssetRequest);
+        //从当前用户token中获取企业ID，保证只查询当前企业的
+        Page<AssetDO> assetPage = assetService.searchByTagName(queryAssetRequest.tag(), queryAssetRequest.pageIndex(), queryAssetRequest.pageSize());
+        //转换成对外暴露的对象
+        return Result.ok(
+                PageResult.page(
+                        (int) assetPage.getTotalElements(),
+                        queryAssetRequest.pageSize(),
+                        queryAssetRequest.pageIndex(),
+                        assetPage.getContent().stream().map(AssetConverter.INSTANCE::transToResponse).toList()
+                )
+        );
     }
 
 }

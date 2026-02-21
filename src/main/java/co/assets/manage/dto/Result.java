@@ -3,7 +3,7 @@ package co.assets.manage.dto;
 
 import co.assets.manage.config.exception.AbstractException;
 import co.assets.manage.config.exception.ForwardServiceException;
-import co.assets.manage.enums.IResultMsg;
+import co.assets.manage.enums.api.IResultMsg;
 import co.assets.manage.enums.api.APIEnum;
 import co.assets.manage.utils.ExceptionUtils;
 import lombok.Getter;

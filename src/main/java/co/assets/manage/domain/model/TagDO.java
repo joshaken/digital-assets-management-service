@@ -1,22 +1,24 @@
-package co.assets.manage.domain;
+package co.assets.manage.domain.model;
 
 
+import co.assets.manage.domain.BaseDomain;
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 import org.hibernate.annotations.Comment;
 
-import java.time.LocalDateTime;
-
-@Entity
+@Getter
+@Setter
+@ToString
+@NoArgsConstructor
+@Entity(name = "tag")
 @Table(name = "tag", indexes = {
         @Index(name = "idx_parent", columnList = "parent_id")
 })
 @Comment("タグ情報を管理するテーブル")
-public class TagDO {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Comment("タグID（主キー）")
-    private Long id;
+public class TagDO extends BaseDomain {
 
     @Column(nullable = false, length = 100)
     @Comment("タグ名称")
@@ -24,9 +26,6 @@ public class TagDO {
 
     @Column(name = "parent_id")
     @Comment("親タグID（階層構造用、NULL可）")
-    private Long parent;
+    private Long parentId;
 
-    @Column(name = "create_time")
-    @Comment("作成日時")
-    private LocalDateTime createTime;
 }

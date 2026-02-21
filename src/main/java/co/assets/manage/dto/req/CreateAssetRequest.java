@@ -16,8 +16,7 @@ public record CreateAssetRequest(
          */
         @NotBlank(message = "ファイルパスは必須項目です")
         @Size(min = 1, max = 500, message = "ファイルパスは500文字以内で入力してください")
-        String filePath,
+        String filePath
 
-        Long enterpriseId
 ) {
 }

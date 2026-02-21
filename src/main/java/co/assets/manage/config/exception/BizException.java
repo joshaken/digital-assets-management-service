@@ -1,7 +1,7 @@
 package co.assets.manage.config.exception;
 
 import co.assets.manage.enums.api.APIEnum;
-import co.assets.manage.enums.IResultMsg;
+import co.assets.manage.enums.api.IResultMsg;
 
 import java.io.Serial;
 
