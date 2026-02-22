@@ -7,7 +7,6 @@
 CREATE TABLE asset
 (
     id                 BIGINT AUTO_INCREMENT PRIMARY KEY,
-    enterprise_id      BIGINT                         NULL,
     title              VARCHAR(255)                   NOT NULL,
     file_path          VARCHAR(500)                   NOT NULL,
     ai_tag_status      VARCHAR(20)  DEFAULT 'PENDING' NOT NULL,
@@ -21,7 +20,6 @@ CREATE TABLE asset
 
 COMMENT ON TABLE asset IS 'デジタルアセット情報を管理するテーブル';
 COMMENT ON COLUMN asset.id IS 'アセットID（主キー）';
-COMMENT ON COLUMN asset.enterprise_id IS '所属企業ID（マルチテナント対応）';
 COMMENT ON COLUMN asset.title IS 'アセットタイトル';
 COMMENT ON COLUMN asset.file_path IS 'ファイル保存パス';
 COMMENT ON COLUMN asset.ai_tag_status IS 'AIタグ付与状態（PENDING/ SUCCESS / FAILED）';
@@ -32,7 +30,6 @@ COMMENT ON COLUMN asset.update_time IS '最終更新日時';
 COMMENT ON COLUMN asset.delete_time IS '論理削除日時（削除された場合のみ設定）';
 COMMENT ON COLUMN asset.deleted IS '論理削除フラグ（0：有効、1：削除済み）';
 
-CREATE INDEX idx_enterprise ON asset (enterprise_id);
 CREATE INDEX idx_create_time ON asset (create_time);
 CREATE INDEX idx_tag_retry ON asset (ai_tag_status, ai_tag_retry_count, deleted);
 

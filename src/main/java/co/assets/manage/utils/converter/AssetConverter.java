@@ -3,7 +3,7 @@ package co.assets.manage.utils.converter;
 import co.assets.manage.domain.event.AssetTagEvent;
 import co.assets.manage.domain.model.po.AssetDO;
 import co.assets.manage.dto.req.CreateAssetRequest;
-import co.assets.manage.dto.resp.QueryAssetResponse;
+import co.assets.manage.dto.resp.SearchAssetResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Mappings;
@@ -27,5 +27,7 @@ public interface AssetConverter {
     })
     AssetTagEvent transToEvent(AssetDO assetDO);
 
-    QueryAssetResponse transToResponse(AssetDO assetDO);
+    SearchAssetResponse transToResponse(AssetDO assetDO);
+
+
 }

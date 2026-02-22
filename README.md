@@ -28,8 +28,7 @@
 ```json
 {
   "title": "example.jpg",
-  "filePath": "bucket/images/example.jpg",
-  "enterpriseId": 1
+  "filePath": "bucket/images/example.jpg"
 }
 ````
 
@@ -37,7 +36,6 @@
 
     * title: NotNull
     * filePath: 最大 500 文字、将来的にオブジェクトストレージ形式チェック
-    * enterpriseId: nullable、デフォルト 0
 
 * **レスポンス**: 保存結果（成功 / 失敗）
 
@@ -111,7 +109,6 @@
 
 ## 8. 設計上のポイント
 
-* **マルチテナント対応**: asset に `enterpriseId` を付与
 * **DO 内メソッド**: 自身の状態更新・ファクトリーメソッドのみ
 * **record クラス**: リクエスト DTO に使用、デフォルト値はコンストラクタで設定
 * **ページング**: `pageIndex` + `pageSize` 形式

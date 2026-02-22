@@ -1,6 +1,6 @@
 package co.assets.manage.dto.resp;
 
-public record QueryAssetResponse(
+public record SearchAssetResponse(
         String title,
         String filePath
 ) {

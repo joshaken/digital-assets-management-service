@@ -14,4 +14,7 @@ public interface TagJPARepository extends JpaRepository<TagDO, Long>, JpaSpecifi
 
     @Query(value = "select tag from tag where deleted= :deleted")
     List<TagDO> findByDeleted(@Param("deleted") Boolean deleted);
+
+    @Query(value = "select id from tag where name= :name and deleted= :deleted")
+    Long findIdByName(@Param("name") String name);
 }

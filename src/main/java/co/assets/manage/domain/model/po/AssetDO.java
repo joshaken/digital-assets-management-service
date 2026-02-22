@@ -20,10 +20,6 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class AssetDO extends BaseDomain {
 
-    @Column(name = "enterprise_id")
-    @Comment("所属企業ID（マルチテナント対応）")
-    private Long enterpriseId;
-
     @Column(nullable = false)
     @Comment("アセットタイトル")
     private String title;

@@ -6,4 +6,6 @@ import java.util.List;
 
 public interface ITagRepository {
     List<TagDO> findAllNotDeletedTag();
+
+    Long findTagIdByName(String tag);
 }

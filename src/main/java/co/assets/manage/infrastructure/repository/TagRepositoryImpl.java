@@ -17,4 +17,9 @@ public class TagRepositoryImpl implements ITagRepository {
     public List<TagDO> findAllNotDeletedTag() {
         return tagJPARepository.findByDeleted(Boolean.FALSE);
     }
+
+    @Override
+    public Long findTagIdByName(String tag) {
+        return tagJPARepository.findIdByName(tag);
+    }
 }

@@ -1,13 +1,15 @@
 package co.assets.manage.trigger.http;
 
 import co.assets.manage.domain.model.po.AssetDO;
+import co.assets.manage.domain.model.query.AssetsQueryCondition;
 import co.assets.manage.dto.Result;
 import co.assets.manage.dto.req.CreateAssetRequest;
 import co.assets.manage.dto.req.QueryAssetRequest;
 import co.assets.manage.dto.resp.PageResult;
-import co.assets.manage.dto.resp.QueryAssetResponse;
+import co.assets.manage.dto.resp.SearchAssetResponse;
 import co.assets.manage.utils.converter.AssetConverter;
 import co.assets.manage.service.IAssetService;
+import co.assets.manage.utils.converter.TagConverter;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -34,8 +36,6 @@ public class AssetsController extends BaseController {
         //转换成创建类，并设置新增asset时必备的参数
         AssetDO assetDO = AssetConverter.INSTANCE.reqTransToDO(createAssetRequest);
         //从当前用户token中获取企业ID，保证数据不混乱,如果是单企业系统可去除
-        Long enterpriseId = getCurrentEnterpriseId();
-        assetDO.setEnterpriseId(enterpriseId);
         assetService.create(assetDO);
         return Result.ok();
     }
@@ -48,13 +48,11 @@ public class AssetsController extends BaseController {
      * @return 指定されたタグを持つアセットを 一覧取得
      */
     @GetMapping("/assets/search")
-    public Result<PageResult<QueryAssetResponse>> search(QueryAssetRequest queryAssetRequest) {
+    public Result<PageResult<SearchAssetResponse>> search(QueryAssetRequest queryAssetRequest) {
         log.info("api/assets/search request{}", queryAssetRequest);
-        //从当前用户token中获取企业ID，保证只查询当前企业的， 如果是单企业系统可去除
-        Long enterpriseId = getCurrentEnterpriseId();
-        Page<AssetDO> assetPage = assetService.searchByTagName(queryAssetRequest.tag(), queryAssetRequest.pageIndex(), queryAssetRequest.pageSize());
-
-        //TODO 转换成对象进行传递查询，通过lastPageMaxId自动判断是否需要使用特殊的分页查询
+        //转换成对象进行传递查询，通过lastPageMaxId自动判断是否需要使用特殊的分页查询
+        AssetsQueryCondition assetsQueryCondition = TagConverter.INSTANCE.transToQueryCondition(queryAssetRequest);
+        Page<AssetDO> assetPage = assetService.pageQueryByTagName(assetsQueryCondition);
         //转换成对外暴露的对象
         return Result.ok(
                 PageResult.page(

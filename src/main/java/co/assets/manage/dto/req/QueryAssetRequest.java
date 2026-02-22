@@ -18,7 +18,7 @@ public record QueryAssetRequest(
         Integer pageSize,
 
         //上页最大ID
-        Integer lastPageMaxId
+        Long lastPageMaxId
 ) {
 
     public QueryAssetRequest {

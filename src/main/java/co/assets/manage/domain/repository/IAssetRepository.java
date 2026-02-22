@@ -1,6 +1,7 @@
 package co.assets.manage.domain.repository;
 
 import co.assets.manage.domain.model.po.AssetDO;
+import co.assets.manage.domain.model.query.AssetsQueryCondition;
 import co.assets.manage.enums.AiTagStatusEnum;
 import org.springframework.data.domain.Page;
 
@@ -17,4 +18,8 @@ public interface IAssetRepository {
     List<AssetDO> findAssetByStatusAndRetryCount(AiTagStatusEnum aiTagStatus, Integer retryCount, Integer limit);
 
     void updateRetryCount(Long assetId);
+
+    List<AssetDO> findAssetByMinId(AssetsQueryCondition queryCondition);
+
+    Long countByTagId(Long tagId);
 }

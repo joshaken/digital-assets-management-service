@@ -1,6 +1,7 @@
 package co.assets.manage.infrastructure.repository;
 
 import co.assets.manage.domain.model.po.AssetDO;
+import co.assets.manage.domain.model.query.AssetsQueryCondition;
 import co.assets.manage.domain.repository.IAssetRepository;
 import co.assets.manage.enums.AiTagStatusEnum;
 import co.assets.manage.infrastructure.repository.jpa.AssetJPARepository;
@@ -35,6 +36,16 @@ public class AssetRepositoryImpl implements IAssetRepository {
     @Override
     public void updateRetryCount(Long assetId) {
         assetJPARepository.updateTagStatusAndCount(assetId);
+    }
+
+    @Override
+    public List<AssetDO> findAssetByMinId(AssetsQueryCondition queryCondition) {
+        return assetJPARepository.findByMinIdAndLimit(queryCondition.getTagId(), queryCondition.getLastPageMaxId(), queryCondition.getPageSize());
+    }
+
+    @Override
+    public Long countByTagId(Long tagId) {
+        return assetJPARepository.countByTagId(tagId);
     }
 
     @Override
