@@ -24,7 +24,7 @@ public class AssetDO extends BaseDomain {
     @Comment("所属企業ID（マルチテナント対応）")
     private Long enterpriseId;
 
-    @Column(nullable = false, length = 255)
+    @Column(nullable = false)
     @Comment("アセットタイトル")
     private String title;
 
@@ -41,9 +41,9 @@ public class AssetDO extends BaseDomain {
     @Comment("AIタグ付与のリトライ回数")
     private Integer aiTagRetryCount;
 
-    @Column(name = "ai_tag_fail_reason")
+    @Column(name = "ai_tag_fail_reason", length = 500)
     @Comment("AIタグ付けが失敗する理由")
-    private Integer aiTagFailReason;
+    private String aiTagFailReason;
 
     @Column(name = "update_time")
     @Comment("更新日時")

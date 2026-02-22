@@ -17,6 +17,7 @@ public class AsyncEventPublisher implements AssetAddTagPublisher {
 
     @Override
     public void sendCreateAssetEvent(AssetTagEvent assetTagEvent) {
+
         eventPublisher.publishEvent(assetTagEvent);
     }
 }

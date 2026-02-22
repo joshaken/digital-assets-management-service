@@ -53,6 +53,8 @@ public class AssetsController extends BaseController {
         //从当前用户token中获取企业ID，保证只查询当前企业的， 如果是单企业系统可去除
         Long enterpriseId = getCurrentEnterpriseId();
         Page<AssetDO> assetPage = assetService.searchByTagName(queryAssetRequest.tag(), queryAssetRequest.pageIndex(), queryAssetRequest.pageSize());
+
+        //TODO 转换成对象进行传递查询，通过lastPageMaxId自动判断是否需要使用特殊的分页查询
         //转换成对外暴露的对象
         return Result.ok(
                 PageResult.page(

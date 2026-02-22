@@ -22,6 +22,6 @@ public class AssetTagEventConsumer {
     public void createAsset(AssetTagEvent event) {
         log.info("接收到创建Asset事件:{}", JsonUtil.toJson(event));
 
-        tagService.addTag(event.getAssetId(), event.getFilePath());
+        tagService.addTag(event.assetId(), event.filePath());
     }
 }

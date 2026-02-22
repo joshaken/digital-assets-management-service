@@ -22,8 +22,8 @@ public class TagDO extends BaseDomain {
     @Comment("タグ名称")
     private String name;
 
-    @Column(name = "category")
+    @Column(name = "category", length = 100)
     @Comment("カテゴリ")
-    private Long category;
+    private String category;
 
 }
