@@ -7,6 +7,7 @@ import co.assets.manage.enums.api.IResultMsg;
 import co.assets.manage.enums.api.APIEnum;
 import co.assets.manage.utils.ExceptionUtils;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
@@ -19,6 +20,7 @@ import java.util.Map;
 @Getter
 @Setter
 @ToString
+@NoArgsConstructor
 public class Result<T> implements Serializable {
 
     @Serial
@@ -46,57 +48,6 @@ public class Result<T> implements Serializable {
         return status >= 0;
     }
 
-    /**
-     * 静态方法检查返回结果是否为成功状态
-     *
-     * @param result
-     * @return
-     */
-    public static boolean isSuccess(Result result) {
-        if (result == null) {
-            return false;
-        }
-        return result.isSuccess();
-    }
-
-    public Result() {
-    }
-
-    Result(T data) {
-        this.status = APIEnum.SUCCESS.getCode();
-        this.message = APIEnum.SUCCESS.getMessage();
-        this.data = data;
-    }
-
-    Result(T data, Integer status, String message) {
-        this.status = status;
-        this.message = message;
-        this.data = data;
-    }
-
-    Result(IResultMsg result) {
-        this.status = result.getCode();
-        this.message = result.getMessage();
-        this.data = null;
-    }
-
-    Result(IResultMsg result, String message) {
-        this.status = result.getCode();
-        this.message = message;
-        this.data = null;
-    }
-
-    Result(IResultMsg result, T data) {
-        this.status = result.getCode();
-        this.message = result.getMessage();
-        this.data = data;
-    }
-
-    Result(Integer status, String message) {
-        this.status = status;
-        this.message = message;
-        this.data = null;
-    }
 
     /**
      * 返回操作成功对应的API响应
@@ -117,37 +68,6 @@ public class Result<T> implements Serializable {
         return Result.getCustomResponse(APIEnum.SUCCESS, data);
     }
 
-    /**
-     * 返回自定义的任意数据
-     *
-     * @param status 状态
-     * @param data   数据
-     * @return API响应对象
-     */
-    public static <T> Result<T> ok(IResultMsg status, T data) {
-        Result<T> result = getCustomResponse(status);
-        result.setData(data);
-        return result;
-    }
-
-    public static <T> Result<T> error() {
-        return Result.getCustomResponse(APIEnum.FAILED);
-    }
-
-
-    public static <T> Result<T> paramError() {
-        return Result.getCustomResponse(APIEnum.FAILED);
-    }
-
-    /**
-     * 返回操作成功对应的API响应
-     *
-     * @return API响应对象
-     */
-    public static <T> Result<T> error(T data) {
-        assert !(data instanceof IResultMsg);
-        return Result.getCustomResponse(APIEnum.FAILED, data);
-    }
 
 
     /**
@@ -163,19 +83,6 @@ public class Result<T> implements Serializable {
         return result;
     }
 
-    public static <T> Result<T> getCustomResponse(ForwardServiceException e) {
-        Result<T> result = new Result<>();
-        result.setStatus(APIEnum.FOR_WORDING_ERROR.getCode());
-        result.setMessage(e.getMessage());
-        return result;
-    }
-
-    public static <T> Result<T> getErrorResponse(Integer code, String msg) {
-        Result<T> result = new Result<>();
-        result.setStatus(code);
-        result.setMessage(msg);
-        return result;
-    }
 
     /**
      * 返回自定义的任意数据
@@ -190,51 +97,4 @@ public class Result<T> implements Serializable {
         return result;
     }
 
-    /**
-     * 返回参数异常数据
-     *
-     * @param status
-     * @param data
-     * @param <T>
-     * @return
-     */
-    public static <T> Result<T> getErrorResponse(IResultMsg status, T data) {
-        Result<T> result = getCustomResponse(status);
-        result.setMessage(result.getMessage() + data);
-        return result;
-    }
-
-    public static <T> Result<T> getErrorResponse(Throwable e) {
-        Result<T> result = new Result<>();
-        if (e instanceof AbstractException && ((AbstractException) e).getMsg() != null) {
-            AbstractException exception = (AbstractException) e;
-            result.setStatus(exception.getMsg().getCode());
-            result.setMessage(e.getMessage());
-        } else {
-            result.setStatus(APIEnum.FAILED.getCode());
-            result.setMessage(e.getMessage());
-        }
-        result.setErrorInfo(ExceptionUtils.getExceptionMainInfo(e));
-        result.setErrorMessage(e.getMessage());
-        return result;
-    }
-
-    /**
-     * 在失败的情况下拷贝错误消息等
-     *
-     * @param result
-     * @param <T>
-     * @return
-     */
-    public static <T> Result<T> convertResult(Result result) {
-        if (result == null) {
-            return Result.getCustomResponse(APIEnum.FAILED);
-        }
-        Result<T> r = new Result<>();
-        r.setErrorMessage(result.errorMessage);
-        r.setStatus(result.status);
-        r.setErrorInfo(result.errorInfo);
-        r.setMessage(result.message);
-        return r;
-    }
 }

@@ -7,6 +7,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.util.*;
@@ -14,6 +16,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Slf4j
+@ConditionalOnProperty(value = "config.ai", havingValue = "ollama")
+@Service
 public class OllamaAiTagClient implements AiTagClient {
 
     private static final String BASE_URL = "http://localhost:11434";

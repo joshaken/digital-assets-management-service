@@ -35,7 +35,6 @@ public class AssetsController extends BaseController {
         log.info("api/assets request{}", createAssetRequest);
         //转换成创建类，并设置新增asset时必备的参数
         AssetDO assetDO = AssetConverter.INSTANCE.reqTransToDO(createAssetRequest);
-        //从当前用户token中获取企业ID，保证数据不混乱,如果是单企业系统可去除
         assetService.create(assetDO);
         return Result.ok();
     }

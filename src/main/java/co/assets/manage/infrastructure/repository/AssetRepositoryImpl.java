@@ -9,6 +9,7 @@ import jakarta.annotation.Resource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -27,10 +28,17 @@ public class AssetRepositoryImpl implements IAssetRepository {
     @Override
     public void updateTagStatus(Long assetId, AiTagStatusEnum aiTagStatusEnum, String aiTagFailReason) {
         if (AiTagStatusEnum.SUCCESS.equals(aiTagStatusEnum)) {
-            assetJPARepository.updateTagStatus(assetId, aiTagStatusEnum.name());
+            assetJPARepository.updateTagStatus(assetId, aiTagStatusEnum);
         } else {
-            assetJPARepository.updateTagStatusAndFailReason(assetId, aiTagStatusEnum.name(), aiTagFailReason);
+            assetJPARepository.updateTagStatusAndFailReason(assetId, aiTagStatusEnum, aiTagFailReason);
         }
+    }
+
+    @Override
+    public List<AssetDO> findAssetByTagId(AssetsQueryCondition queryCondition) {
+        return assetJPARepository.searchByTagName(queryCondition.getTagId()
+                , queryCondition.getOffset()
+                , queryCondition.getPageSize());
     }
 
     @Override
@@ -48,12 +56,6 @@ public class AssetRepositoryImpl implements IAssetRepository {
         return assetJPARepository.countByTagId(tagId);
     }
 
-    @Override
-    public Page<AssetDO> pageQueryByTagName(String tagName, Integer pageIndex, Integer pageSize) {
-        Pageable pageable = PageRequest.of(pageIndex, pageSize);
-
-        return assetJPARepository.searchByTagName(tagName, pageable);
-    }
 
     @Override
     public List<AssetDO> findAssetByStatusAndRetryCount(AiTagStatusEnum aiTagStatus, Integer retryCount, Integer limit) {

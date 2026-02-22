@@ -3,8 +3,6 @@ package co.assets.manage.utils.converter;
 import co.assets.manage.domain.model.query.AssetsQueryCondition;
 import co.assets.manage.dto.req.QueryAssetRequest;
 import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.Mappings;
 import org.mapstruct.ReportingPolicy;
 import org.mapstruct.factory.Mappers;
 

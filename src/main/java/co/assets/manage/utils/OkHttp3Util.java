@@ -1,15 +1,11 @@
 package co.assets.manage.utils;
 
-import co.assets.manage.config.exception.BizException;
 import co.assets.manage.config.exception.ForwardServiceException;
 import jakarta.annotation.Resource;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
 import org.springframework.stereotype.Component;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Base64;
 import java.util.Iterator;

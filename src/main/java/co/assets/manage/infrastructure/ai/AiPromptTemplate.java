@@ -2,7 +2,6 @@ package co.assets.manage.infrastructure.ai;
 
 import co.assets.manage.config.constants.AiPromptConstants;
 
-import java.util.List;
 import java.util.Set;
 
 public class AiPromptTemplate {

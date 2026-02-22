@@ -21,4 +21,9 @@ public class AssetsQueryCondition {
     //上页最大ID
     private Long lastPageMaxId;
 
+    public Integer getOffset() {
+        return (this.getPageIndex() - 1) * this.getPageSize();
+    }
+
+
 }

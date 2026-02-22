@@ -1,10 +1,12 @@
 package co.assets.manage;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class DigitalAssetsManagementServiceApplicationTests {
+@AutoConfigureMockMvc
+public class DamServiceAppTests {
 
     @Test
     void contextLoads() {

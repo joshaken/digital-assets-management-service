@@ -16,33 +16,38 @@ public class PageResult<T> implements Serializable {
     /**
      * 当前页
      */
-//    @Schema(description = "当前页", requiredMode = Schema.RequiredMode.REQUIRED)
     private Integer pageIndex;
     /**
-     * 分页记录数量
+     * 页数量
      */
-//    @Schema(description = "分页记录数量", requiredMode = Schema.RequiredMode.REQUIRED)
     private Integer pageCount;
 
     /**
-     * 每页的数据条数
+     * 每页条数
      */
-//    @Schema(description = "每页的数据条数", requiredMode = Schema.RequiredMode.REQUIRED)
     private Integer pageSize;
 
     /**
-     * 记录列表
+     * 数据列表
      */
     private List<T> list;
+    /**
+     * 总条数
+     */
+    private Integer count;
 
 
+    /**
+     * 记录条数
+     */
     public static <T> PageResult<T> page(int count, int pageSize, int pageIndex, List<T> results) {
         PageResult<T> commonPageResult = new PageResult<>();
         commonPageResult.setPageSize(pageSize);
+        commonPageResult.setCount(count);
         commonPageResult.setPageIndex(pageIndex);
         commonPageResult.setList(results);
         // 计算总页数
-        int pageCount = (pageSize == 0 || count == 0) ? 1 : (int) Math.ceil((double) count / (double) pageSize);
+        Integer pageCount = (pageSize == 0 || count == 0) ? 1 : (int) Math.ceil((double) count / (double) pageSize);
         commonPageResult.setPageCount(pageCount);
         return commonPageResult;
     }

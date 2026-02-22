@@ -1,7 +1,7 @@
 package co.assets.manage.infrastructure.repository.jpa;
 
 import co.assets.manage.domain.model.po.AssetDO;
-import co.assets.manage.domain.model.query.AssetsQueryCondition;
+import co.assets.manage.enums.AiTagStatusEnum;
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -20,12 +20,12 @@ public interface AssetJPARepository extends JpaRepository<AssetDO, Long>, JpaSpe
     @Modifying
     @Transactional(rollbackOn = Exception.class)
     @Query(value = "update asset set aiTagStatus= :status,updateTime=now() where id= :assetId")
-    int updateTagStatus(@Param("assetId") Long assetId, @Param("status") String status);
+    int updateTagStatus(@Param("assetId") Long assetId, @Param("status") AiTagStatusEnum status);
 
     @Modifying
     @Transactional(rollbackOn = Exception.class)
     @Query(value = "update asset set aiTagStatus= :status,updateTime=now(),aiTagFailReason= :failReason where id= :assetId")
-    int updateTagStatusAndFailReason(@Param("assetId") Long assetId, @Param("status") String status, @Param("failReason") String aiTagFailReason);
+    int updateTagStatusAndFailReason(@Param("assetId") Long assetId, @Param("status") AiTagStatusEnum status, @Param("failReason") String aiTagFailReason);
 
     @Modifying
     @Transactional(rollbackOn = Exception.class)
@@ -33,35 +33,24 @@ public interface AssetJPARepository extends JpaRepository<AssetDO, Long>, JpaSpe
     void updateTagStatusAndCount(@Param("assetId") Long assetId);
 
     @Query(value = """
-            SELECT a
-            FROM asset a
-            WHERE a.deleted = false
-              AND EXISTS (
-                  SELECT 1
-                  FROM asset_tag at
-                  JOIN tag t ON at.tagId = t.id
-                  WHERE at.assetId = a.id
-                    AND at.deleted = false
-                    AND t.deleted = false
-                    AND t.name = :tagName
-              )
-            """
-            , countQuery = """
-            SELECT COUNT(a.id)
-            FROM asset a
-            WHERE a.deleted = false
-              AND EXISTS (
-                  SELECT 1
-                  FROM asset_tag at
-                  JOIN tag t ON at.tagId = t.id
-                  WHERE at.assetId = a.id
-                    AND at.deleted = false
-                    AND t.deleted = false
-                    AND t.name = :tagName
-              )
-            """
-    )
-    Page<AssetDO> searchByTagName(@Param("tagName") String tagName, Pageable pageable);
+        SELECT a.*
+        FROM asset a
+        WHERE a.deleted = false
+          AND EXISTS (
+              SELECT 1
+              FROM asset_tag at
+              WHERE at.asset_id = a.id
+                AND at.tag_id = :tagId
+                AND at.deleted = false
+          )
+        ORDER BY a.id
+        LIMIT :limit OFFSET :offset
+        """, nativeQuery = true)
+    List<AssetDO> searchByTagName(
+            @Param("tagId") Long tagId,
+            @Param("offset") int offset,
+            @Param("limit") int limit
+    );
 
     @Query(value = "select * from asset where ai_tag_status= :status and deleted=false and ai_tag_retry_count< :retryCount limit :lim"
             , nativeQuery = true)

@@ -10,10 +10,10 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 })
 @EnableJpaRepositories(basePackages = "co.assets.manage.infrastructure.repository")
 @SpringBootApplication
-public class DigitalAssetsManagementServiceApplication {
+public class DamServiceApp {
 
     public static void main(String[] args) {
-        SpringApplication.run(DigitalAssetsManagementServiceApplication.class, args);
+        SpringApplication.run(DamServiceApp.class, args);
     }
 
 }

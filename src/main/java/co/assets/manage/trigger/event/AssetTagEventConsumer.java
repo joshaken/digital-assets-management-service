@@ -18,7 +18,7 @@ public class AssetTagEventConsumer {
     private ITagService tagService;
 
     @EventListener(value = AssetTagEvent.class)
-    @Async(AsyncExecutionAspectSupport.DEFAULT_TASK_EXECUTOR_BEAN_NAME)
+//    @Async(AsyncExecutionAspectSupport.DEFAULT_TASK_EXECUTOR_BEAN_NAME)
     public void createAsset(AssetTagEvent event) {
         log.info("接收到创建Asset事件:{}", JsonUtil.toJson(event));
 

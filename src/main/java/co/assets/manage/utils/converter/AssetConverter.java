@@ -16,7 +16,7 @@ public interface AssetConverter {
 
     @Mappings({
             @Mapping(target = "createTime", expression = "java(java.sql.Timestamp.valueOf(java.time.LocalDateTime.now()))"),
-            @Mapping(target = "aiTagRetryCount", constant = "1"),
+            @Mapping(target = "aiTagRetryCount", constant = "0"),
             @Mapping(target = "deleted", constant = "false"),
             @Mapping(target = "aiTagStatus", expression = "java(co.assets.manage.enums.AiTagStatusEnum.PENDING)"),
     })

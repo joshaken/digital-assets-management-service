@@ -18,8 +18,7 @@ import org.springframework.context.annotation.Configuration;
         topic = RocketMqConfig.Topic.ASSET_TAG_AI,
         consumerGroup = RocketMqConfig.Group.ASSET_TAG_AI,
         consumeMode = ConsumeMode.CONCURRENTLY,
-        maxReconsumeTimes = 3,
-        consumeThreadNumber = 20
+        maxReconsumeTimes = 3
 )
 public class AssetTagMqConsumer implements RocketMQListener<AssetTagEvent> {
 

@@ -1,9 +1,9 @@
 package co.assets.manage.service.impl;
 
+import co.assets.manage.domain.model.aggregates.AssetTagRich;
 import co.assets.manage.domain.model.po.AssetDO;
 import co.assets.manage.domain.model.po.AssetTagDO;
 import co.assets.manage.domain.model.po.TagDO;
-import co.assets.manage.domain.model.aggregates.AssetTagRich;
 import co.assets.manage.domain.repository.IAssetRepository;
 import co.assets.manage.domain.repository.IAssetTagRepository;
 import co.assets.manage.domain.repository.ITagRepository;
@@ -12,14 +12,12 @@ import co.assets.manage.infrastructure.ai.AiTagClient;
 import co.assets.manage.infrastructure.storage.ImageQueryClient;
 import co.assets.manage.service.ITagService;
 import co.assets.manage.service.workflow.AssetProcessingContext;
-import co.assets.manage.utils.CustomStringUtils;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -49,7 +47,8 @@ public class TagServiceImpl implements ITagService {
     }
 
     /**
-     * 简化的责任链模式处理打标签的流程，分别包括读取图片具体数据和调用AI获取对应的标签
+     * 简化的责任链模式处理打标签的流程，
+     * 分别包括读取图片具体数据和调用AI获取对应的标签，每一步失败都会导致执行链结束，后续可以改成执行链List的执行逻辑
      *
      * @param context 责任链上下文
      */
@@ -70,7 +69,11 @@ public class TagServiceImpl implements ITagService {
                         .stream()
                         //过滤掉不可用标签
                         .filter(allowTag -> context.getTagsConfidenceMap().containsKey(allowTag.getKey()))
-                        .map(allowSet -> AssetTagRich.ofAi(assetId, allowSet.getValue(), context.getTagsConfidenceMap().get(allowSet.getKey()), currentTime))
+                        .map(allowSet ->
+                                //转换成tag和asset的映射类
+                                AssetTagRich.ofAi(assetId, allowSet.getValue()
+                                        , context.getTagsConfidenceMap().get(allowSet.getKey())
+                                        , currentTime))
                         .toList();
                 iAssetTagRepository.batchCreate(assetTagDOList);
                 //更新asset的标签状态
@@ -122,6 +125,8 @@ public class TagServiceImpl implements ITagService {
     private Map<String, Long> queryTagAndIdMap() {
         //获取所有的标签, 这里后面可以改成从缓存中获取所有的标签
         List<TagDO> tagDOList = iTagRepository.findAllNotDeletedTag();
+
+        log.info("find undeleted tag count [{}]", tagDOList.size());
         //获取tagName和tageId的映射map
         return tagDOList.stream()
                 .collect(Collectors.toMap(TagDO::getName, TagDO::getId, (existing, replacement) -> existing));

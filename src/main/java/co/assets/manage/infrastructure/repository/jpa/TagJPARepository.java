@@ -12,9 +12,9 @@ import java.util.List;
 @Repository
 public interface TagJPARepository extends JpaRepository<TagDO, Long>, JpaSpecificationExecutor<TagDO> {
 
-    @Query(value = "select tag from tag where deleted= :deleted")
+    @Query(value = "select t from tag t where t.deleted= :deleted")
     List<TagDO> findByDeleted(@Param("deleted") Boolean deleted);
 
-    @Query(value = "select id from tag where name= :name and deleted= :deleted")
+    @Query(value = "select id from tag where name= :name and deleted= false ")
     Long findIdByName(@Param("name") String name);
 }
