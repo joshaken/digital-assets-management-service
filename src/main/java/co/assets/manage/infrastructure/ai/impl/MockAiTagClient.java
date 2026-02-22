@@ -9,6 +9,9 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
+/**
+ * AIインターフェースの呼び出しをシミュレート、インターフェースロジックのテストに使用可能
+ */
 @Service
 @ConditionalOnProperty(value = "config.ai", havingValue = "mock", matchIfMissing = true)
 public class MockAiTagClient implements AiTagClient {
@@ -18,10 +21,11 @@ public class MockAiTagClient implements AiTagClient {
     public Map<String, Double> identifyTags(byte[] imageBytes, String mimeType, Set<String> allowedTags) {
         Map<String, Double> result = new HashMap<>(allowedTags.size());
 
-        // 随机从 allowedTags 里选择若干个，模拟 AI 打标签
+        // allowedTagsからランダムにいくつか選択して、AIによるタグ付けをシミュレート
         for (String tag : allowedTags) {
             if (random.nextBoolean()) { // 50% 概率选择
-                double confidence = 0.5 + random.nextDouble() * 0.5; // 0.5~1.0
+                // 0.5~1.0
+                double confidence = 0.5 + random.nextDouble() * 0.5;
                 result.put(tag, confidence);
             }
         }

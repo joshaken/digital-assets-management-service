@@ -6,9 +6,8 @@ import co.assets.manage.enums.api.IResultMsg;
 import java.io.Serial;
 
 /**
- * 业务异常
+ * 業務例外
  */
-//@Schema(description = "业务的异常模型")
 public class BizException extends AbstractException {
     @Serial
     private static final long serialVersionUID = -644174310560740232L;

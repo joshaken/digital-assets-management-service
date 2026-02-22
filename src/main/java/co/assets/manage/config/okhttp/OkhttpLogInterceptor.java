@@ -15,14 +15,14 @@ import java.nio.charset.StandardCharsets;
 @Slf4j
 public class OkhttpLogInterceptor implements Interceptor {
     private static final Charset UTF8 = StandardCharsets.UTF_8;
-    // 1MB，避免 OOM
+    // 1MB、OOMを回避
     private static final long MAX_LOG_BODY_SIZE = 1024 * 1024;
 
     @Override
     public Response intercept(Chain chain) throws IOException {
         Request request = chain.request();
 
-        // 记录请求基本信息（不读 body）
+        // リクエストの基本情報を記録（bodyは読み込まない）
         boolean logRequest = log.isInfoEnabled();
         boolean logResponse = log.isInfoEnabled();
 
@@ -56,7 +56,7 @@ public class OkhttpLogInterceptor implements Interceptor {
         Headers headers = request.headers();
         for (int i = 0, size = headers.size(); i < size; i++) {
             String name = headers.name(i);
-            // 避免打印敏感头（如 Authorization），可按需过滤
+            // 機密ヘッダー（例：Authorization）の出力を避け
             if ("Authorization".equalsIgnoreCase(name) || "Cookie".equalsIgnoreCase(name)) {
                 sb.append(name).append(": *****\n");
             } else {
@@ -99,9 +99,9 @@ public class OkhttpLogInterceptor implements Interceptor {
             BufferedSource source = responseBody.source();
             try {
                 // Peek entire body (up to MAX_LOG_BODY_SIZE)
-                source.request(MAX_LOG_BODY_SIZE);
-                Buffer buffer = source.buffer().clone(); // clone to avoid consuming original
-                String body = getTruncatedString(buffer, responseBody.contentType());
+                // clone to avoid consuming original
+                String body = source.peek().readUtf8(Math.min(source.getBuffer().size(), MAX_LOG_BODY_SIZE));
+                ;
                 sb.append("Body:\n").append(body).append('\n');
             } catch (IOException e) {
                 sb.append("Body: [Failed to read response body]\n");
@@ -116,10 +116,12 @@ public class OkhttpLogInterceptor implements Interceptor {
         Charset charset = UTF8;
         if (contentType != null) {
             try {
-                charset = contentType.charset(UTF8);
+                Charset parsedCharset = contentType.charset(UTF8);
+                if (parsedCharset != null) {
+                    charset = parsedCharset;
+                }
             } catch (Exception ignored) {
-                // fallback to UTF-8
-                charset = UTF8;
+                // Keep default UTF-8 — no need to reassign
             }
         }
 

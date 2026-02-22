@@ -10,6 +10,9 @@ import org.springframework.data.annotation.LastModifiedDate;
 
 import java.sql.Timestamp;
 
+/**
+ * データテーブルの共通カラムマッピングクラス
+ */
 @Getter
 @Setter
 @ToString

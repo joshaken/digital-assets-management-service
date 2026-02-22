@@ -3,7 +3,7 @@ package co.assets.manage.config.exception;
 import co.assets.manage.enums.api.APIEnum;
 import co.assets.manage.enums.api.IResultMsg;
 
-//@Schema(description = "下游服务异常解析")
+//下流サービスの例外
 public class ForwardServiceException extends BizException {
     private Integer code;
 

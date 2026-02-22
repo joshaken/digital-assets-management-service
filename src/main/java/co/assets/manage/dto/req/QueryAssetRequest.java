@@ -6,27 +6,26 @@ import jakarta.validation.constraints.Size;
 public record QueryAssetRequest(
 
         /*
-         * 这里其实可以从前端直接传递tag的Id，方便后续联表查询时少查询一张表
+         * ここでは、前端から直接タグのIDを渡すことができ、後続の結合クエリで1つのテーブルを減らせる
          */
         @NotBlank(message = "タグは必須項目です")
         @Size(min = 1, max = 100, message = "タグは100文字以内で入力してください")
         String tag,
 
-        //页数
+        //ページ番号
         Integer pageIndex,
-        //每页大小
+        //1ページあたりの件数
         Integer pageSize,
-
-        //上页最大ID
+        //前ページの最大ID
         Long lastPageMaxId
 ) {
 
     public QueryAssetRequest {
-        // 如果 page 为 null，赋默认值
+        // pageIndex デフォルト値を設定
         if (pageIndex == null || pageIndex < 0) {
             pageIndex = 1;
         }
-        // 如果 size 为 null，赋默认值
+        // pageSize デフォルト値を設定
         if (pageSize == null || pageSize > 20) {
             pageSize = 20;
         }

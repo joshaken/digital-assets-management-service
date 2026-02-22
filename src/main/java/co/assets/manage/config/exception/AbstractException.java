@@ -12,7 +12,7 @@ public abstract class AbstractException extends RuntimeException {
     @Serial
     private static final long serialVersionUID = -1813767369790744025L;
 
-    //    @Schema(name = "错误消息对象", description = "IResultMsg", requiredMode = Schema.RequiredMode.REQUIRED)
+    //エラー情報を含むオブジェクト
     private final IResultMsg msg;
 
     public AbstractException(IResultMsg error) {

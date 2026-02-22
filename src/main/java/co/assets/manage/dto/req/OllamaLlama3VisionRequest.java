@@ -39,6 +39,13 @@ public class OllamaLlama3VisionRequest {
         private List<String> images;
     }
 
+    /**
+     * HTTP方式でAIインターフェースを呼び出すための、汎用リクエスト生成メソッド
+     * @param base64Image 画像のBase64文字列
+     * @param model AIモデル名
+     * @param fullPrompt AIのprompt
+     * @return OllamaLlama3VisionRequest
+     */
     public static OllamaLlama3VisionRequest transToRequest(String base64Image, String model, String fullPrompt) {
 
         OllamaLlama3VisionRequest.Message message = new OllamaLlama3VisionRequest.Message();

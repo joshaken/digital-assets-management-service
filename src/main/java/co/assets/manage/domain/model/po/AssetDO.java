@@ -30,7 +30,7 @@ public class AssetDO extends BaseDomain {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "ai_tag_status", nullable = false, length = 20)
-    @Comment("AIタグ付与状態（PENDING / PROCESSING / COMPLETED / FAILED）")
+    @Comment("AIタグ付与状態（PENDING / COMPLETED / FAILED）")
     private AiTagStatusEnum aiTagStatus;
 
     @Column(name = "ai_tag_retry_count", nullable = false)
