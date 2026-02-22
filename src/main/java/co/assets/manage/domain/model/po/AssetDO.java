@@ -41,6 +41,10 @@ public class AssetDO extends BaseDomain {
     @Comment("AIタグ付与のリトライ回数")
     private Integer aiTagRetryCount;
 
+    @Column(name = "ai_tag_fail_reason")
+    @Comment("AIタグ付けが失敗する理由")
+    private Integer aiTagFailReason;
+
     @Column(name = "update_time")
     @Comment("更新日時")
     private LocalDateTime updateTime;

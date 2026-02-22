@@ -7,15 +7,16 @@
 CREATE TABLE asset
 (
     id                 BIGINT AUTO_INCREMENT PRIMARY KEY,
-    enterprise_id      BIGINT                        NULL,
-    title              VARCHAR(255)                  NOT NULL,
-    file_path          VARCHAR(500)                  NOT NULL,
-    ai_tag_status      VARCHAR(20) DEFAULT 'PENDING' NOT NULL,
-    ai_tag_retry_count INT         DEFAULT 0         NOT NULL,
-    create_time        TIMESTAMP   DEFAULT CURRENT_TIMESTAMP,
-    update_time        TIMESTAMP   DEFAULT NULL,
-    delete_time        TIMESTAMP   DEFAULT NULL,
-    deleted            TINYINT                       NOT NULL DEFAULT 0
+    enterprise_id      BIGINT                         NULL,
+    title              VARCHAR(255)                   NOT NULL,
+    file_path          VARCHAR(500)                   NOT NULL,
+    ai_tag_status      VARCHAR(20)  DEFAULT 'PENDING' NOT NULL,
+    ai_tag_retry_count INT          DEFAULT 0         NOT NULL,
+    ai_tag_fail_reason VARCHAR(500) DEFAULT '',
+    create_time        TIMESTAMP    DEFAULT CURRENT_TIMESTAMP,
+    update_time        TIMESTAMP    DEFAULT NULL,
+    delete_time        TIMESTAMP    DEFAULT NULL,
+    deleted            TINYINT                        NOT NULL DEFAULT 0
 );
 
 COMMENT ON TABLE asset IS 'デジタルアセット情報を管理するテーブル';
@@ -25,6 +26,7 @@ COMMENT ON COLUMN asset.title IS 'アセットタイトル';
 COMMENT ON COLUMN asset.file_path IS 'ファイル保存パス';
 COMMENT ON COLUMN asset.ai_tag_status IS 'AIタグ付与状態（PENDING/ SUCCESS / FAILED）';
 COMMENT ON COLUMN asset.ai_tag_retry_count IS 'AIタグ付与のリトライ回数';
+COMMENT ON COLUMN asset.ai_tag_fail_reason IS 'AIタグ付けが失敗する理由';
 COMMENT ON COLUMN asset.create_time IS '作成日時';
 COMMENT ON COLUMN asset.update_time IS '最終更新日時';
 COMMENT ON COLUMN asset.delete_time IS '論理削除日時（削除された場合のみ設定）';
@@ -42,7 +44,7 @@ CREATE TABLE tag
 (
     id          BIGINT AUTO_INCREMENT PRIMARY KEY,
     name        VARCHAR(100) NOT NULL UNIQUE,
-    category    VARCHAR(100) NULL,
+    category    VARCHAR(100)          DEFAULT '',
     create_time TIMESTAMP             DEFAULT CURRENT_TIMESTAMP,
     delete_time TIMESTAMP             DEFAULT NULL,
     deleted     TINYINT      NOT NULL DEFAULT 0

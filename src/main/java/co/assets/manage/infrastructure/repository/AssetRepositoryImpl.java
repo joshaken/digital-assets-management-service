@@ -10,6 +10,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class AssetRepositoryImpl implements IAssetRepository {
 
@@ -22,14 +24,30 @@ public class AssetRepositoryImpl implements IAssetRepository {
     }
 
     @Override
-    public void updateTagStatus(Long assetId, AiTagStatusEnum aiTagStatusEnum) {
-        assetJPARepository.updateTagStatus(assetId, aiTagStatusEnum.name());
+    public void updateTagStatus(Long assetId, AiTagStatusEnum aiTagStatusEnum, String aiTagFailReason) {
+        if (AiTagStatusEnum.SUCCESS.equals(aiTagStatusEnum)) {
+            assetJPARepository.updateTagStatus(assetId, aiTagStatusEnum.name());
+        } else {
+            assetJPARepository.updateTagStatusAndFailReason(assetId, aiTagStatusEnum.name(), aiTagFailReason);
+        }
     }
 
     @Override
-    public Page<AssetDO> searchByTagName(String tagName, Integer pageIndex, Integer pageSize) {
+    public void updateRetryCount(Long assetId) {
+        assetJPARepository.updateTagStatusAndCount(assetId);
+    }
+
+    @Override
+    public Page<AssetDO> pageQueryByTagName(String tagName, Integer pageIndex, Integer pageSize) {
         Pageable pageable = PageRequest.of(pageIndex, pageSize);
 
         return assetJPARepository.searchByTagName(tagName, pageable);
     }
+
+    @Override
+    public List<AssetDO> findAssetByStatusAndRetryCount(AiTagStatusEnum aiTagStatus, Integer retryCount, Integer limit) {
+        return assetJPARepository.findAssetByStatusAndRetryCount(aiTagStatus.name(), retryCount, limit);
+    }
+
+
 }

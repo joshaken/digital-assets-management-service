@@ -27,6 +27,6 @@ public class AssetServiceImpl implements IAssetService {
     @Override
     public Page<AssetDO> searchByTagName(String tagName, Integer pageIndex, Integer pageSize) {
 
-        return iAssetRepository.searchByTagName(tagName, pageIndex, pageSize);
+        return iAssetRepository.pageQueryByTagName(tagName, pageIndex, pageSize);
     }
 }
