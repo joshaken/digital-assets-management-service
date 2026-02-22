@@ -1,6 +1,6 @@
 package co.assets.manage.infrastructure.repository.jpa;
 
-import co.assets.manage.domain.model.TagDO;
+import co.assets.manage.domain.model.po.TagDO;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;

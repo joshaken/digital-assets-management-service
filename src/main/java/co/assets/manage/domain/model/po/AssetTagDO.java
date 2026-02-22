@@ -1,4 +1,4 @@
-package co.assets.manage.domain.model;
+package co.assets.manage.domain.model.po;
 
 import co.assets.manage.domain.BaseDomain;
 import co.assets.manage.enums.TagSourceEnum;
@@ -14,9 +14,7 @@ import org.hibernate.annotations.Comment;
 @ToString
 @NoArgsConstructor
 @Entity(name = "asset_tag")
-@Table(name = "asset_tag", indexes = {
-        @Index(name = "idx_asset_tag_id", columnList = "asset_id, tag_id")
-})
+@Table(name = "asset_tag")
 @Comment("アセットとタグの関連付けテーブル")
 public class AssetTagDO extends BaseDomain {
 

@@ -1,6 +1,6 @@
-package co.assets.manage.controller;
+package co.assets.manage.trigger.http;
 
-import co.assets.manage.domain.model.AssetDO;
+import co.assets.manage.domain.model.po.AssetDO;
 import co.assets.manage.dto.Result;
 import co.assets.manage.dto.req.CreateAssetRequest;
 import co.assets.manage.dto.req.QueryAssetRequest;
@@ -30,9 +30,10 @@ public class AssetsController extends BaseController {
      */
     @PostMapping("/assets")
     public Result<Void> create(@Validated @RequestBody CreateAssetRequest createAssetRequest) {
-        //从当前用户token中获取企业ID，保证数据不混乱
         log.info("api/assets request{}", createAssetRequest);
+        //转换成创建类，并设置新增asset时必备的参数
         AssetDO assetDO = AssetConverter.INSTANCE.reqTransToDO(createAssetRequest);
+        //从当前用户token中获取企业ID，保证数据不混乱,如果是单企业系统可去除
         Long enterpriseId = getCurrentEnterpriseId();
         assetDO.setEnterpriseId(enterpriseId);
         assetService.create(assetDO);
@@ -49,7 +50,8 @@ public class AssetsController extends BaseController {
     @GetMapping("/assets/search")
     public Result<PageResult<QueryAssetResponse>> search(QueryAssetRequest queryAssetRequest) {
         log.info("api/assets/search request{}", queryAssetRequest);
-        //从当前用户token中获取企业ID，保证只查询当前企业的
+        //从当前用户token中获取企业ID，保证只查询当前企业的， 如果是单企业系统可去除
+        Long enterpriseId = getCurrentEnterpriseId();
         Page<AssetDO> assetPage = assetService.searchByTagName(queryAssetRequest.tag(), queryAssetRequest.pageIndex(), queryAssetRequest.pageSize());
         //转换成对外暴露的对象
         return Result.ok(

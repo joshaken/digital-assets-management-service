@@ -1,6 +1,6 @@
 package co.assets.manage.domain.repository;
 
-import co.assets.manage.domain.model.AssetTagDO;
+import co.assets.manage.domain.model.po.AssetTagDO;
 
 import java.util.List;
 

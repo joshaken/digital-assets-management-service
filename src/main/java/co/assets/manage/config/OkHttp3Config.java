@@ -1,5 +1,6 @@
 package co.assets.manage.config;
 
+import lombok.extern.slf4j.Slf4j;
 import okhttp3.ConnectionPool;
 import okhttp3.OkHttpClient;
 import org.springframework.context.annotation.Bean;
@@ -16,6 +17,7 @@ import java.security.cert.X509Certificate;
 import java.util.concurrent.TimeUnit;
 
 @Configuration
+@Slf4j
 public class OkHttp3Config {
 
     public X509TrustManager x509TrustManager() {
@@ -38,12 +40,12 @@ public class OkHttp3Config {
 
     public SSLSocketFactory sslSocketFactory() {
         try {
-            //信任任何链接
+            //trust connection
             SSLContext sslContext = SSLContext.getInstance("TLS");
             sslContext.init(null, new TrustManager[]{x509TrustManager()}, new SecureRandom());
             return sslContext.getSocketFactory();
         } catch (NoSuchAlgorithmException | KeyManagementException e) {
-            e.printStackTrace();
+            log.error("sslSocketFactory error {}", e.getMessage(), e);
         }
         return null;
     }

@@ -1,4 +1,4 @@
-package co.assets.manage.domain.model;
+package co.assets.manage.domain.model.po;
 
 
 import co.assets.manage.domain.BaseDomain;
@@ -14,9 +14,7 @@ import org.hibernate.annotations.Comment;
 @ToString
 @NoArgsConstructor
 @Entity(name = "tag")
-@Table(name = "tag", indexes = {
-        @Index(name = "idx_parent", columnList = "parent_id")
-})
+@Table(name = "tag")
 @Comment("タグ情報を管理するテーブル")
 public class TagDO extends BaseDomain {
 
@@ -24,8 +22,8 @@ public class TagDO extends BaseDomain {
     @Comment("タグ名称")
     private String name;
 
-    @Column(name = "parent_id")
-    @Comment("親タグID（階層構造用、NULL可）")
-    private Long parentId;
+    @Column(name = "category")
+    @Comment("カテゴリ")
+    private Long category;
 
 }

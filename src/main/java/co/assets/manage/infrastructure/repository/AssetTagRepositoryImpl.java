@@ -1,6 +1,6 @@
 package co.assets.manage.infrastructure.repository;
 
-import co.assets.manage.domain.model.AssetTagDO;
+import co.assets.manage.domain.model.po.AssetTagDO;
 import co.assets.manage.domain.repository.IAssetTagRepository;
 import co.assets.manage.infrastructure.repository.jpa.AssetTagJPARepository;
 import jakarta.annotation.Resource;

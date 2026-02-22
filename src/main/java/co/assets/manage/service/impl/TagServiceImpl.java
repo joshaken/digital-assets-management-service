@@ -1,7 +1,7 @@
 package co.assets.manage.service.impl;
 
-import co.assets.manage.domain.model.AssetTagDO;
-import co.assets.manage.domain.model.TagDO;
+import co.assets.manage.domain.model.po.AssetTagDO;
+import co.assets.manage.domain.model.po.TagDO;
 import co.assets.manage.domain.model.aggregates.AssetTagRich;
 import co.assets.manage.domain.repository.IAssetRepository;
 import co.assets.manage.domain.repository.IAssetTagRepository;
@@ -50,7 +50,6 @@ public class TagServiceImpl implements ITagService {
             //使用AI获取图片的标签
             Map<String, Double> tagsConfidenceMap = aiTagClient.identifyTags(image, tagIdMap.keySet());
             //保存标签关系
-
             Timestamp currentTime = Timestamp.valueOf(LocalDateTime.now());
             List<AssetTagDO> assetTagDOList = tagIdMap.entrySet()
                     .stream()
@@ -58,11 +57,11 @@ public class TagServiceImpl implements ITagService {
                     .map(allowSet -> AssetTagRich.ofAi(assetId, allowSet.getValue(), tagsConfidenceMap.get(allowSet.getKey()), currentTime))
                     .toList();
             iAssetTagRepository.batchCreate(assetTagDOList);
-
+            //更新asset
+            iAssetRepository.updateTagStatus(assetId, AiTagStatusEnum.SUCCESS);
         } catch (Exception e) {
+            log.error("addTag failed -> call ai handle exception {}", e.getMessage(), e);
             //保存asset打标签失败，等待后续请求处理
-            log.error("addTag failed -> ai handle exception {}", e.getMessage(), e);
-
             iAssetRepository.updateTagStatus(assetId, AiTagStatusEnum.FAILED);
         }
 

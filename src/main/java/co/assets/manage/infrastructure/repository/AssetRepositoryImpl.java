@@ -1,6 +1,6 @@
 package co.assets.manage.infrastructure.repository;
 
-import co.assets.manage.domain.model.AssetDO;
+import co.assets.manage.domain.model.po.AssetDO;
 import co.assets.manage.domain.repository.IAssetRepository;
 import co.assets.manage.enums.AiTagStatusEnum;
 import co.assets.manage.infrastructure.repository.jpa.AssetJPARepository;
@@ -9,8 +9,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 public class AssetRepositoryImpl implements IAssetRepository {

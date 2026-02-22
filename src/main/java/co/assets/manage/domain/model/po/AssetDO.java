@@ -1,4 +1,4 @@
-package co.assets.manage.domain.model;
+package co.assets.manage.domain.model.po;
 
 import co.assets.manage.domain.BaseDomain;
 import co.assets.manage.enums.AiTagStatusEnum;
@@ -12,11 +12,7 @@ import org.hibernate.annotations.Comment;
 import java.time.LocalDateTime;
 
 @Entity(name = "asset")
-@Table(name = "asset", indexes = {
-        @Index(name = "idx_enterprise", columnList = "enterprise_id"),
-        @Index(name = "idx_create_time", columnList = "create_time"),
-        @Index(name = "idx_tag_retry", columnList = "ai_tag_status, ai_tag_retry_count")
-})
+@Table(name = "asset")
 @Comment("デジタルアセット情報を管理するテーブル")
 @Getter
 @Setter

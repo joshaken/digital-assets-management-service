@@ -1,4 +1,4 @@
-package co.assets.manage.controller;
+package co.assets.manage.trigger.http;
 
 public class BaseController {
     protected Long getCurrentEnterpriseId() {

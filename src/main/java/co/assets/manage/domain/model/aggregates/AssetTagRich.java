@@ -1,11 +1,11 @@
 package co.assets.manage.domain.model.aggregates;
 
-import co.assets.manage.domain.model.AssetTagDO;
+import co.assets.manage.domain.model.po.AssetTagDO;
 import co.assets.manage.enums.TagSourceEnum;
 
 import java.sql.Timestamp;
 
-public class AssetTagRich extends AssetTagDO {
+public class AssetTagRich {
 
     public static AssetTagDO ofAi(Long assetId, Long tagId, Double confidence, Timestamp createTime) {
         AssetTagDO tag = new AssetTagDO();

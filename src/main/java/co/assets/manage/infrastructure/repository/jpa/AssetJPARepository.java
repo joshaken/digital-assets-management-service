@@ -1,6 +1,6 @@
 package co.assets.manage.infrastructure.repository.jpa;
 
-import co.assets.manage.domain.model.AssetDO;
+import co.assets.manage.domain.model.po.AssetDO;
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

@@ -1,10 +1,11 @@
-package co.assets.manage.infrastructure.event;
+package co.assets.manage.trigger.event;
 
 import co.assets.manage.domain.event.AssetTagEvent;
 import co.assets.manage.service.ITagService;
 import co.assets.manage.utils.JsonUtil;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.aop.interceptor.AsyncExecutionAspectSupport;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
@@ -17,7 +18,7 @@ public class AssetTagEventConsumer {
     private ITagService tagService;
 
     @EventListener(value = AssetTagEvent.class)
-    @Async
+    @Async(AsyncExecutionAspectSupport.DEFAULT_TASK_EXECUTOR_BEAN_NAME)
     public void createAsset(AssetTagEvent event) {
         log.info("接收到创建Asset事件:{}", JsonUtil.toJson(event));
 

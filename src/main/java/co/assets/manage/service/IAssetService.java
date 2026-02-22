@@ -1,6 +1,6 @@
 package co.assets.manage.service;
 
-import co.assets.manage.domain.model.AssetDO;
+import co.assets.manage.domain.model.po.AssetDO;
 import org.springframework.data.domain.Page;
 
 public interface IAssetService {

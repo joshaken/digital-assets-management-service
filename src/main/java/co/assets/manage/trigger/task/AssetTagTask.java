@@ -1,4 +1,4 @@
-package co.assets.manage.infrastructure.task;
+package co.assets.manage.trigger.task;
 
 import com.xxl.job.core.handler.annotation.XxlJob;
 import org.springframework.stereotype.Component;

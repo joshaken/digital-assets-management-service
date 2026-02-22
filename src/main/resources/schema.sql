@@ -51,12 +51,11 @@ CREATE TABLE tag
 COMMENT ON TABLE tag IS 'タグ情報を管理するテーブル';
 COMMENT ON COLUMN tag.id IS 'タグID（主キー）';
 COMMENT ON COLUMN tag.name IS 'タグ名称';
-COMMENT ON COLUMN tag.category IS '类别';
+COMMENT ON COLUMN tag.category IS 'カテゴリ';
 COMMENT ON COLUMN tag.create_time IS '作成日時';
 COMMENT ON COLUMN asset_tag.delete_time IS '論理削除日時（削除された場合のみ設定）';
 COMMENT ON COLUMN asset_tag.deleted IS '論理削除フラグ（0：有効、1：削除済み）';
 
-CREATE INDEX idx_category ON tag (category);
 CREATE INDEX idx_name_deleted ON tag (name, deleted);
 
 -- ===============================
@@ -86,4 +85,5 @@ COMMENT ON COLUMN asset_tag.delete_time IS '論理削除日時（削除された
 COMMENT ON COLUMN asset_tag.deleted IS '論理削除フラグ（0：有効、1：削除済み）';
 
 -- tag -> asset
-CREATE UNIQUE INDEX idx_tag_asset_id ON asset_tag (tag_id, asset_id, deleted);
+-- 这里先使用普通组合索引，暂时不使用 UNIQUE index, 如果加上unique index之后需要增加delete_id字段来避免数据不能逻辑删除
+CREATE INDEX idx_tag_asset_id ON asset_tag (tag_id, asset_id, deleted);
