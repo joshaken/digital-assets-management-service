@@ -8,24 +8,15 @@ import okio.BufferedSource;
 import java.io.EOFException;
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.nio.charset.UnsupportedCharsetException;
 import java.util.concurrent.TimeUnit;
 
-import okhttp3.*;
-import okio.Buffer;
-import okio.BufferedSource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.concurrent.TimeUnit;
 
 @Slf4j
-public class HttpLogInterceptor implements Interceptor {
+public class OkhttpLogInterceptor implements Interceptor {
     private static final Charset UTF8 = StandardCharsets.UTF_8;
-    private static final long MAX_LOG_BODY_SIZE = 1024 * 1024; // 1MB，避免 OOM
+    // 1MB，避免 OOM
+    private static final long MAX_LOG_BODY_SIZE = 1024 * 1024;
 
     @Override
     public Response intercept(Chain chain) throws IOException {

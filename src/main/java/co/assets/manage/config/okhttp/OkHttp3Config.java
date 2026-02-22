@@ -3,6 +3,7 @@ package co.assets.manage.config.okhttp;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.ConnectionPool;
 import okhttp3.OkHttpClient;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -19,6 +20,9 @@ import java.util.concurrent.TimeUnit;
 @Configuration
 @Slf4j
 public class OkHttp3Config {
+
+    @Value("${config.okhttp.log:false}")
+    private Boolean okhttpLog;
 
     public X509TrustManager x509TrustManager() {
         return new X509TrustManager() {
@@ -56,17 +60,18 @@ public class OkHttp3Config {
      */
     @Bean
     public OkHttpClient okHttpClient() {
-
-
-        return new OkHttpClient.Builder()
+        OkHttpClient.Builder builder = new OkHttpClient.Builder()
                 .sslSocketFactory(sslSocketFactory(), x509TrustManager())
                 .retryOnConnectionFailure(false)
                 .followRedirects(false)
                 .followSslRedirects(false)
-                .addInterceptor(new HttpLogInterceptor())
                 .connectionPool(new ConnectionPool(200, 5, TimeUnit.MINUTES))
                 .connectTimeout(60, TimeUnit.SECONDS)
-                .readTimeout(100, TimeUnit.SECONDS)
+                .readTimeout(100, TimeUnit.SECONDS);
+        if (okhttpLog) {
+            builder.addInterceptor(new OkhttpLogInterceptor());
+        }
+        return builder
                 .build();
     }
 }
