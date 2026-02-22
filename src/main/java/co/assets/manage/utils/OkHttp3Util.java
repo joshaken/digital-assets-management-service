@@ -1,13 +1,16 @@
 package co.assets.manage.utils;
 
 import co.assets.manage.config.exception.ForwardServiceException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
 import org.springframework.stereotype.Component;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.Base64;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -164,11 +167,39 @@ public class OkHttp3Util {
                 }
                 return "";
             } else {
-                return "Unexpected code " + response;
+                throw new ForwardServiceException("okhttp3 postByJson error" + response);
             }
         } catch (Exception e) {
             log.error("okhttp postByJson {}", e.getMessage(), e);
-            return "";
+            throw new ForwardServiceException("okhttp3 postByJson error" + e.getMessage());
+        }
+    }
+
+    public Map<String, Double> getTagsByPostJson(String url, Object reqBody) {
+        Request request = new Request.Builder()
+                .url(url)
+                .post(RequestBody.create(
+                        JsonUtil.toJson(reqBody),
+                        MediaType.parse("application/json")
+                ))
+                .build();
+
+        try (Response response = okHttpClient.newCall(request).execute()) {
+            if (!response.isSuccessful()) {
+                throw new RuntimeException("Ollama error: " + response.code());
+            }
+
+            // 按行读取 NDJSON
+            Map<String, Double> tags = new HashMap<>();
+            BufferedReader reader = new BufferedReader(response.body().charStream());
+            String line;
+            while ((line = reader.readLine()) != null) {
+                Map<String, Double> lineMap = JsonUtil.toObj(line, new TypeReference<Map<String, Double>>() {});
+                tags.putAll(lineMap);
+            }
+            return tags;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 

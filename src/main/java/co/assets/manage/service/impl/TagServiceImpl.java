@@ -12,6 +12,7 @@ import co.assets.manage.infrastructure.ai.AiTagClient;
 import co.assets.manage.infrastructure.storage.ImageQueryClient;
 import co.assets.manage.service.ITagService;
 import co.assets.manage.service.workflow.AssetProcessingContext;
+import co.assets.manage.utils.CustomStringUtils;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -111,7 +112,10 @@ public class TagServiceImpl implements ITagService {
      */
     private void processTagsByAi(AssetProcessingContext context) {
         try {
-            Map<String, Double> tagsConfidenceMap = aiTagClient.identifyTags(context.getImage(), context.getTagIdMap().keySet());
+            Map<String, Double> tagsConfidenceMap = aiTagClient.identifyTags(
+                    context.getImage()
+                    , CustomStringUtils.getMimeTypeFromExtension(context.getFilePath())
+                    , context.getTagIdMap().keySet());
 
             context.setTagsConfidenceMap(tagsConfidenceMap);
 

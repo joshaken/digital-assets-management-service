@@ -3,3 +3,19 @@ spring:
     name: digital-assets-management-service
   profiles:
     active: dev
+  ai:
+    ollama:
+      base-url: http://localhost:11434
+#      api-key: ${AI_BAILIAN_API_KEY}
+      chat:
+        options:
+          model: ${AI_MODEL:llama3.2-vision}
+          temperature: 0.7
+      embedding:
+        options:
+          model: text-embedding-v3
+    retry:
+      max-attempts: 1
+      on-client-errors: false
+config:
+  ai: spring

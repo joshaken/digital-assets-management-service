@@ -36,20 +36,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Slf4j
 class AssetControllerHttpTest extends DamServiceAppTests {
 
-//    @LocalServerPort
-//    private int port;
-
     @Resource
     private AssetJPARepository assetJPARepository;
     @Resource
     private AssetTagJPARepository assetTagJPARepository;
     @Resource
     private TagJPARepository tagJPARepository;
-
-
     @Resource
     private MockMvc mockMvc;
-//    private TestRestTemplate restTemplate;
 
     private String baseUrl() {
         return "http://localhost:" + 8080 + "/api";
@@ -86,8 +80,8 @@ class AssetControllerHttpTest extends DamServiceAppTests {
 
         log.info("responseJson {}", responseJson);
 
-//        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-//        assertThat(response.getBody()).isNotNull();
+        Result<Void> response = JsonUtil.toObj(responseJson, new TypeReference<>() {});
+        assertThat(response.isSuccess()).isEqualTo(Boolean.TRUE);
 
         // 查询数据库验证
         List<AssetDO> assets = assetJPARepository.findAll();
@@ -140,8 +134,6 @@ class AssetControllerHttpTest extends DamServiceAppTests {
     @Sql("/test-sql/init-asset-tag.sql")
     void testSearchByTag() throws Exception {
 
-//        String url = baseUrl() +
-//                "/assets/search?tag=Commercial";
         MvcResult mvcResult = mockMvc.perform(get("/api/assets/search")
                         .param("tag", "Commercial")
 //                        .param("lastPageMaxId", "0")
@@ -149,19 +141,11 @@ class AssetControllerHttpTest extends DamServiceAppTests {
                 .andExpect(status().isOk())
                 .andDo(print())
                 .andReturn();
-//        ResponseEntity<Result<PageResult<SearchAssetResponse>>> response =
-//                restTemplate.exchange(
-//                        url,
-//                        HttpMethod.GET,
-//                        null,
-//                        new ParameterizedTypeReference<Result<PageResult<SearchAssetResponse>>>() {
-//                        }
-//                );
 
         String responseJson = mvcResult.getResponse().getContentAsString();
         log.info("responseJson {}", responseJson);
 
-        Result<PageResult<SearchAssetResponse>> response = JsonUtil.toObj(responseJson, new TypeReference<Result<PageResult<SearchAssetResponse>>>() {
+        Result<PageResult<SearchAssetResponse>> response = JsonUtil.toObj(responseJson, new TypeReference<>() {
         });
         assertThat(response.isSuccess()).isEqualTo(Boolean.TRUE);
         PageResult<SearchAssetResponse> pageResult = response.getData();
