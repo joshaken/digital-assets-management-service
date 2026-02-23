@@ -30,7 +30,6 @@ COMMENT ON COLUMN asset.update_time IS '最終更新日時';
 COMMENT ON COLUMN asset.delete_time IS '論理削除日時（削除された場合のみ設定）';
 COMMENT ON COLUMN asset.deleted IS '論理削除フラグ（0：有効、1：削除済み）';
 
-CREATE INDEX idx_create_time ON asset (create_time);
 CREATE INDEX idx_tag_retry ON asset (ai_tag_status, ai_tag_retry_count, deleted);
 
 -- ===============================

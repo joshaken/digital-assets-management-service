@@ -19,17 +19,22 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.aop.interceptor.AsyncExecutionAspectSupport;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.datasource.init.DatabasePopulatorUtils;
 import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 import javax.sql.DataSource;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -51,6 +56,10 @@ class AssetControllerHttpTest extends DamServiceAppTests {
     private TagJPARepository tagJPARepository;
     @Resource
     private MockMvc mockMvc;
+
+    @Resource
+    @Qualifier(AsyncExecutionAspectSupport.DEFAULT_TASK_EXECUTOR_BEAN_NAME)
+    private ThreadPoolTaskExecutor asyncTaskExecutor;
 
     /**
      * テスト用SQLを実行する
@@ -116,6 +125,9 @@ class AssetControllerHttpTest extends DamServiceAppTests {
         assertThat(saved.getAiTagRetryCount()).isEqualTo(0);
         assertThat(saved.getDeleted()).isFalse();
 
+        //非同期処理の完了を待機してから結果を取得する
+        waitForAsyncTasksToComplete();
+
         // 関連タグ関係の検証
         List<AssetTagDO> relations =
                 assetTagJPARepository.findByAssetIdAndDeletedFalse(saved.getId());
@@ -136,6 +148,23 @@ class AssetControllerHttpTest extends DamServiceAppTests {
             assertThat(tag.getDeleted()).isFalse();
             assertThat(tag.getName()).isNotBlank();
         });
+    }
+
+    /**
+     * 非同期タスクの完了を待機するユーティリティメソッド
+     */
+    private void waitForAsyncTasksToComplete() throws InterruptedException {
+        ThreadPoolExecutor executor = asyncTaskExecutor.getThreadPoolExecutor();
+        executor.shutdown();
+
+        boolean finished = executor.awaitTermination(60, TimeUnit.SECONDS);
+
+        if (!finished) {
+            executor.shutdownNow();
+            throw new RuntimeException("非同期タスクが60秒以内に完了しませんでした");
+        }
+
+        asyncTaskExecutor.initialize();
     }
 
     /**
