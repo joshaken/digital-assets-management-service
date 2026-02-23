@@ -8,8 +8,4 @@ import org.springframework.boot.test.context.SpringBootTest;
 @AutoConfigureMockMvc
 public class DamServiceAppTests {
 
-    @Test
-    void contextLoads() {
-    }
-
 }

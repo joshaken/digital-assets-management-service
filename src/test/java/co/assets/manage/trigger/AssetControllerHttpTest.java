@@ -24,8 +24,6 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.datasource.init.DatabasePopulatorUtils;
 import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
-import org.springframework.test.annotation.Rollback;
-import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
@@ -74,12 +72,14 @@ class AssetControllerHttpTest extends DamServiceAppTests {
      * アセット登録テスト
      */
     @Test
+    @DisplayName("アセット作成テスト：有効なリクエストでアセットが正常に保存され、関連タグも正しく登録されることを確認")
     void testCreateAsset() throws Exception {
+        //テスト用リクエスト作成
         CreateAssetRequest request = new CreateAssetRequest(
                 "test-asset",
                 "https://images.unsplash.com/photo-1511578314322-379afb476865"
         );
-
+        //API 呼び出し
         MvcResult mvcResult = mockMvc.perform(
                         post("/api/assets")
                                 .contentType(MediaType.APPLICATION_JSON)
@@ -89,14 +89,14 @@ class AssetControllerHttpTest extends DamServiceAppTests {
                 .andDo(print())
                 .andReturn();
         String responseJson = mvcResult.getResponse().getContentAsString();
-
         log.info("responseJson {}", responseJson);
 
+        //レスポンスの検証
         Result<Void> response = JsonUtil.toObj(responseJson, new TypeReference<>() {
         });
         assertThat(response.isSuccess()).isEqualTo(Boolean.TRUE);
 
-        // 查询数据库验证
+        //  データベースから保存されたアセットを取得
         List<AssetDO> assets = assetJPARepository.findAll();
 
         assertThat(assets).isNotEmpty();
@@ -106,23 +106,23 @@ class AssetControllerHttpTest extends DamServiceAppTests {
                 .findFirst()
                 .orElseThrow();
 
-        // 字段断言
+        // アセットフィールドの検証
         assertThat(saved.getTitle()).isEqualTo("test-asset");
         assertThat(saved.getFilePath())
                 .isEqualTo("https://images.unsplash.com/photo-1511578314322-379afb476865");
 
-        // 默认值验证
+        // デフォルト値の検証
         assertThat(saved.getAiTagStatus()).isBetween(AiTagStatusEnum.PENDING, AiTagStatusEnum.SUCCESS);
         assertThat(saved.getAiTagRetryCount()).isEqualTo(0);
         assertThat(saved.getDeleted()).isFalse();
 
-        // 查询关联关系
+        // 関連タグ関係の検証
         List<AssetTagDO> relations =
                 assetTagJPARepository.findByAssetIdAndDeletedFalse(saved.getId());
 
         assertThat(relations).isNotEmpty();
 
-        // 查询具体标签
+        // タグIDを抽出してタグエンティティを取得
         List<Long> tagIds = relations.stream()
                 .map(AssetTagDO::getTagId)
                 .toList();
@@ -131,7 +131,7 @@ class AssetControllerHttpTest extends DamServiceAppTests {
 
         assertThat(tags).isNotEmpty();
 
-        // 验证标签确实存在
+        // 各タグの整合性を検証
         tags.forEach(tag -> {
             assertThat(tag.getDeleted()).isFalse();
             assertThat(tag.getName()).isNotBlank();
@@ -166,36 +166,35 @@ class AssetControllerHttpTest extends DamServiceAppTests {
         assertThat(pageResult.getList()).hasSize(11);
 
         List<String> actualFilePaths = pageResult.getList().stream()
-                .map(SearchAssetResponse::filePath) // 假设 SearchAssetResponse 有 getFilePath()
+                .map(SearchAssetResponse::filePath)
                 .collect(Collectors.toList());
 
-        // 定义期望的两个 filePath（顺序可能不固定，所以用 containsExactlyInAnyOrder）
         List<String> expectedFilePaths = Arrays.asList(
                 "https://images.unsplash.com/photo-1556157382-97eda2d62296",
                 "https://images.unsplash.com/photo-1511578314322-379afb476865"
         );
 
-        // 验证：实际结果包含且仅包含这两个 URL（顺序无关）
+        // 検証：実際の結果に含まれるURLはこの2件のみであること
         assertThat(actualFilePaths)
                 .containsAnyElementsOf(expectedFilePaths);
         log.info("Total: {} ", pageResult.getPageCount());
-        pageResult.getList().forEach(System.out::println);
+        pageResult.getList().forEach(p -> log.info("{}", p));
     }
 
     @Test
     @DisplayName("アセット検索 - 'Commercial' タグで分頁検索 → 各ページに3件ずつ、合計11件のデータが返ることを確認")
     void searchAssets_WithTagCommercial_ShouldReturnPaginatedResults() throws Exception {
-        // 第一次请求：第一页（pageIndex=1, pageSize=3）
+        // 1回目のリクエスト：1ページ目（pageIndex=1, pageSize=3）
         MvcResult firstPageResult = mockMvc.perform(get("/api/assets/search")
                         .param("tag", "Commercial")
-                        .param("pageIndex", "0")
+                        .param("pageIndex", "1")
                         .param("pageSize", "3"))
                 .andExpect(status().isOk())
                 .andDo(print())
                 .andReturn();
 
         String firstPageResponseJson = firstPageResult.getResponse().getContentAsString();
-        log.info("First page responseJson: {}", firstPageResponseJson);
+        log.info("second page responseJson: {}", firstPageResponseJson);
 
         Result<PageResult<SearchAssetResponse>> firstPageResponse = JsonUtil.toObj(firstPageResponseJson, new TypeReference<>() {
         });
@@ -203,9 +202,10 @@ class AssetControllerHttpTest extends DamServiceAppTests {
 
         PageResult<SearchAssetResponse> firstPageResultData = firstPageResponse.getData();
         assertThat(firstPageResultData).isNotNull();
-        assertThat(firstPageResultData.getList()).hasSize(3); // 确保第一条返回了3条记录
+        // 3件のみが返却されていることを確認する
+        assertThat(firstPageResultData.getList()).hasSize(3);
 
-        // 第二次请求：第二页（pageIndex=1, pageSize=3）
+        // 2回目のリクエスト：2ページ目（pageIndex=2, pageSize=3）
         MvcResult secondPageResult = mockMvc.perform(get("/api/assets/search")
                         .param("tag", "Commercial")
                         .param("pageIndex", "2")
@@ -223,13 +223,13 @@ class AssetControllerHttpTest extends DamServiceAppTests {
 
         PageResult<SearchAssetResponse> secondPageResultData = secondPageResponse.getData();
         assertThat(secondPageResultData).isNotNull();
-        assertThat(secondPageResultData.getList()).hasSize(3); // 确保第二条也返回了3条记录
+        // 3件のみが返却されていることを確認する
+        assertThat(secondPageResultData.getList()).hasSize(3);
 
-        // 验证总数是否为6
+        // 総件数11件、総ページ数4であることを確認する
         assertThat(firstPageResultData.getCount()).isEqualTo(11);
         assertThat(firstPageResultData.getPageCount()).isEqualTo(4);
 
-        // 打印所有返回的 filePath 以便调试
         List<String> allFilePaths = Stream.concat(
                 firstPageResultData.getList().stream(),
                 secondPageResultData.getList().stream()
@@ -249,7 +249,6 @@ class AssetControllerHttpTest extends DamServiceAppTests {
                         .content(JsonUtil.toJson(invalidRequest))
                 )
                 .andExpect(status().isOk())
-                // 对应 PARAM_ERROR
                 .andExpect(jsonPath("$.status").value(-301))
                 .andExpect(jsonPath("$.message").value("ファイルパスは必須項目です"));
     }
