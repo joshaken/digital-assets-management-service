@@ -13,7 +13,7 @@ public class ForwardServiceException extends BizException {
         super(new IResultMsg() {
             @Override
             public Integer getCode() {
-                return APIEnum.FOR_WORDING_ERROR.getCode();
+                return APIEnum.FORWARD_ERROR.getCode();
             }
 
             @Override

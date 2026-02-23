@@ -16,10 +16,10 @@ import co.assets.manage.utils.JsonUtil;
 import com.fasterxml.jackson.core.type.TypeReference;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
@@ -28,9 +28,10 @@ import org.springframework.test.web.servlet.MvcResult;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Slf4j
@@ -80,7 +81,8 @@ class AssetControllerHttpTest extends DamServiceAppTests {
 
         log.info("responseJson {}", responseJson);
 
-        Result<Void> response = JsonUtil.toObj(responseJson, new TypeReference<>() {});
+        Result<Void> response = JsonUtil.toObj(responseJson, new TypeReference<>() {
+        });
         assertThat(response.isSuccess()).isEqualTo(Boolean.TRUE);
 
         // 查询数据库验证
@@ -135,7 +137,7 @@ class AssetControllerHttpTest extends DamServiceAppTests {
     void testSearchByTag() throws Exception {
 
         MvcResult mvcResult = mockMvc.perform(get("/api/assets/search")
-                        .param("tag", "Commercial")
+                                .param("tag", "Commercial")
 //                        .param("lastPageMaxId", "0")
                 )
                 .andExpect(status().isOk())
@@ -155,5 +157,21 @@ class AssetControllerHttpTest extends DamServiceAppTests {
 
         log.info("Total: {} ", pageResult.getPageCount());
         pageResult.getList().forEach(System.out::println);
+    }
+
+    @Test
+    @DisplayName("アセット作成 - リクエストパラメータ不正 → 400エラー")
+    void createAsset_WhenInvalidRequest_ThenReturn400() throws Exception {
+        // Given: 故意传入非法参数（如空文件路径）
+        CreateAssetRequest invalidRequest = new CreateAssetRequest(null, null); // 假设 filePath 为 @NotBlank
+
+        // When & Then
+        mockMvc.perform(post("/api/assets")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(JsonUtil.toJson(invalidRequest))
+                )
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value(-301)) // 对应 PARAM_ERROR
+                .andExpect(jsonPath("$.msg").value("パラメータエラー"));
     }
 }

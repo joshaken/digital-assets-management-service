@@ -52,7 +52,7 @@ rocketmq:
 #  consumer:
 #    group: asset-tag-consumer-group
 #    pull-batch-size: 20
-  name-server: 10.5.103.6:9876
+  name-server: 127.0.0.1:9876
   producer:
     # 同じ種類のメッセージは同じグループに設定し、ユニーク性を保証
     group: asset-tag-producer-group

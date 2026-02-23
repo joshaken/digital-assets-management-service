@@ -1,6 +1,7 @@
 package co.assets.manage.dto;
 
 
+import co.assets.manage.config.exception.AbstractException;
 import co.assets.manage.enums.api.APIEnum;
 import co.assets.manage.enums.api.IResultMsg;
 import lombok.Getter;
@@ -11,7 +12,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.util.Map;
 
 @Slf4j
 @Getter
@@ -82,4 +82,31 @@ public class Result<T> implements Serializable {
         return result;
     }
 
+    public static <T> Result<T> error() {
+        return Result.getCustomResponse(APIEnum.FAILED);
+    }
+
+    public static <T> Result<T> error(T data) {
+        return Result.getCustomResponse(APIEnum.FAILED, data);
+    }
+
+    public static <T> Result<T> getErrorResponse(Throwable e) {
+        Result<T> result = new Result<>();
+        if (e instanceof AbstractException exception && ((AbstractException) e).getMsg() != null) {
+            result.setStatus(exception.getMsg().getCode());
+            result.setMessage(e.getMessage());
+        } else {
+            result.setStatus(APIEnum.FAILED.getCode());
+            result.setMessage(e.getMessage());
+        }
+        return result;
+    }
+
+
+    public static <T> Result<T> getErrorResponse(Integer code, String msg) {
+        Result<T> result = new Result<>();
+        result.setStatus(code);
+        result.setMessage(msg);
+        return result;
+    }
 }
