@@ -8,7 +8,6 @@ spring:
       minimum-idle: 5
       maximum-pool-size: 10
       auto-commit: false
-
   h2:
     console:
       enabled: true
@@ -22,7 +21,20 @@ spring:
       hibernate:
         format_sql: true
         transaction.jta.platform: org.hibernate.engine.transaction.jta.platform.internal.NoJtaPlatform
-
+  ai:
+    ollama:
+      base-url: http://localhost:11434
+      #      api-key:
+      chat:
+        options:
+          model: ${AI_MODEL:llama3.2-vision}
+          temperature: 0.7
+      embedding:
+        options:
+          model: text-embedding-v3
+    retry:
+      max-attempts: 1
+      on-client-errors: false
 logging:
   level:
     org.hibernate.orm.connections.pooling: WARN

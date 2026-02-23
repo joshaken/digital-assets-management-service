@@ -10,7 +10,15 @@ public class ImageQueryClient {
     @Resource
     public OkHttp3Util okHttp3Util;
 
+    /**
+     * OkHttpを使って画像のバイナリデータを取得
+     * 後で、OSSサービスにアクセスするように変更可能
+     *
+     * @param filePath filePath
+     * @return file byte[] data
+     */
     public byte[] getImage(String filePath) {
-       return okHttp3Util.downloadImage(filePath);
+
+        return okHttp3Util.loadImage(filePath);
     }
 }

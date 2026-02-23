@@ -14,6 +14,9 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+/**
+ * (asset) データベースとやり取りするJPAの実装
+ */
 @Repository
 public interface AssetJPARepository extends JpaRepository<AssetDO, Long>, JpaSpecificationExecutor<AssetDO> {
 

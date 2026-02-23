@@ -1,3 +1,4 @@
+-- assetのテストデータ
 INSERT INTO asset (id, title, file_path, ai_tag_status, ai_tag_retry_count, deleted) VALUES
     (1, 'Business Executive Portrait for Commercial Campaign',
      'https://images.unsplash.com/photo-1556157382-97eda2d62296',

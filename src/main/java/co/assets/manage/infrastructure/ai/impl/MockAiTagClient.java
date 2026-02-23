@@ -18,12 +18,13 @@ public class MockAiTagClient implements AiTagClient {
     private final Random random = new Random();
 
     @Override
-    public Map<String, Double> identifyTags(byte[] imageBytes, String mimeType, Set<String> allowedTags) {
+    public Map<String, Double> identifyTags(byte[] imageBytes, Set<String> allowedTags) {
         Map<String, Double> result = new HashMap<>(allowedTags.size());
 
         // allowedTagsからランダムにいくつか選択して、AIによるタグ付けをシミュレート
         for (String tag : allowedTags) {
-            if (random.nextBoolean()) { // 50% 概率选择
+            // 50% 概率选择
+            if (random.nextBoolean()) {
                 // 0.5~1.0
                 double confidence = 0.5 + random.nextDouble() * 0.5;
                 result.put(tag, confidence);

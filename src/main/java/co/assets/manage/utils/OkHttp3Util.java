@@ -2,16 +2,15 @@ package co.assets.manage.utils;
 
 import co.assets.manage.config.exception.ForwardServiceException;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.util.Base64;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 @Slf4j
@@ -25,13 +24,12 @@ public class OkHttp3Util {
 
 
     /**
-     * 根据 URL 下载图片并转换为 byte[]
+     * URLから画像をダウンロードしてbyte[]に変換
      *
-     * @param imageUrl 图片链接
-     * @return 图片字节数组
-     * @throws IOException 下载失败时抛出异常
+     * @param imageUrl 画像のURL
+     * @return 画像 の　byte[]
      */
-    public byte[] downloadImage(String imageUrl) {
+    public byte[] loadImage(String imageUrl) {
         Request request = new Request.Builder()
                 .url(imageUrl)
                 .get()
@@ -51,99 +49,6 @@ public class OkHttp3Util {
         } catch (Exception e) {
             throw new ForwardServiceException(e.getMessage());
         }
-    }
-
-    public ResponseBody getFile(String url) {
-        log.info("getFile [{}]", url);
-        Request request = new Request.Builder()
-                .url(url)
-                .build();
-        try (Response response = okHttpClient.newCall(request).execute()) {
-            return response.body();
-        } catch (Exception e) {
-            log.error("okhttp getFile {}", e.getMessage(), e);
-            return null;
-        }
-//        return okHttpClient.newCall(request).execute().body();
-    }
-
-
-    public String getFilePicBase64(String url) {
-        Request request = new Request.Builder()
-                .url(url)
-                .get()
-                .build();
-        try (Response response = okHttpClient.newCall(request).execute()) {
-            if (response.isSuccessful()) {
-//            return getRequestBody(response);
-                if (response.body() != null) {
-                    return Base64.getEncoder().encodeToString(response.body().bytes());
-                }
-                return null;
-            } else {
-                throw new IOException("Unexpected code " + response);
-            }
-        } catch (Exception e) {
-            log.error("okhttp postByJson " + e.getMessage());
-            return null;
-        }
-    }
-
-
-    /**
-     * get
-     *
-     * @param url     请求的url
-     * @param queries 请求的参数，在浏览器？后面的数据，没有可以传null
-     * @return
-     */
-    public String get(String url, Map<String, String> queries) {
-        String responseBody = "";
-        StringBuffer sb = new StringBuffer(url);
-        if (queries != null && queries.keySet().size() > 0) {
-            boolean firstFlag = true;
-            Iterator iterator = queries.entrySet().iterator();
-            while (iterator.hasNext()) {
-                Map.Entry entry = (Map.Entry<String, String>) iterator.next();
-                if (firstFlag) {
-                    sb.append("?" + entry.getKey() + "=" + entry.getValue());
-                    firstFlag = false;
-                } else {
-                    sb.append("&" + entry.getKey() + "=" + entry.getValue());
-                }
-            }
-        }
-        Request request = new Request
-                .Builder()
-                .url(sb.toString())
-                .build();
-        try (Response response = okHttpClient.newCall(request).execute()) {
-            int status = response.code();
-            if (status == 200) {
-                assert response.body() != null;
-                return response.body().string();
-            }
-        } catch (Exception e) {
-            log.error("okhttp put error >> ex = ", e);
-        }
-        return responseBody;
-    }
-
-    public String get(String url) {
-        Request request = new Request
-                .Builder()
-                .url(url)
-                .build();
-        try (Response response = okHttpClient.newCall(request).execute()) {
-            int status = response.code();
-            if (status == 200) {
-                assert response.body() != null;
-                return response.body().string();
-            }
-        } catch (Exception e) {
-            log.error("okhttp put error >> ex = ", e);
-        }
-        return "";
     }
 
 
@@ -175,31 +80,78 @@ public class OkHttp3Util {
         }
     }
 
+    /**
+     * OKHTTPリクエストを通じてAIのレスポンスを取得
+     *
+     * @param url     target AI URL
+     * @param reqBody request body
+     * @return AIのタグ応答
+     */
     public Map<String, Double> getTagsByPostJson(String url, Object reqBody) {
         Request request = new Request.Builder()
                 .url(url)
                 .post(RequestBody.create(
                         JsonUtil.toJson(reqBody),
-                        MediaType.parse("application/json")
+                        JSON_TYPE
                 ))
                 .build();
 
         try (Response response = okHttpClient.newCall(request).execute()) {
             if (!response.isSuccessful()) {
-                throw new RuntimeException("Ollama error: " + response.code());
+                throw new RuntimeException("Ollama error: " + response.code() + ", body: " + response.body());
             }
 
-            // 按行读取 NDJSON
-            Map<String, Double> tags = new HashMap<>();
+            if (response.body() == null) {
+                throw new RuntimeException("Empty response body from Ollama");
+            }
+
+            // すべてのresponseの断片を結合
+            StringBuilder fullResponse = new StringBuilder();
             BufferedReader reader = new BufferedReader(response.body().charStream());
             String line;
+
             while ((line = reader.readLine()) != null) {
-                Map<String, Double> lineMap = JsonUtil.toObj(line, new TypeReference<Map<String, Double>>() {});
-                tags.putAll(lineMap);
+                // 空行をスキップ
+                if (line.trim().isEmpty()) continue;
+
+                try {
+                    // 現在のNDJSON行を解析
+                    JsonNode chunk = JsonUtil.readTree(line);
+
+                    if (chunk.has("message")) {
+                        JsonNode message = chunk.get("message");
+                        if (message.has("content")) {
+                            String content = message.get("content").asText();
+                            if (StringUtils.hasLength(content)) {
+                                fullResponse.append(content);
+                            }
+                        }
+                    }
+                    if (chunk.path("done").asBoolean(false)) break;
+
+                } catch (Exception e) {
+                    // 解析できない行（ログやエラー情報など）を無視
+                    continue;
+                }
             }
-            return tags;
+
+            String completeJsonStr = fullResponse.toString().trim();
+            if (!StringUtils.hasLength(completeJsonStr)) {
+                throw new RuntimeException("No valid response content received from Ollama");
+            }
+
+            // 最終的に解析された完全なJSON文字列をMap<String, Double>に変換
+            try {
+                return JsonUtil.toObj(completeJsonStr, new TypeReference<Map<String, Double>>() {
+                });
+            } catch (Exception e) {
+                log.error("Failed to parse tag output into Map<String, Double>. Original output: " + completeJsonStr);
+                return JsonUtil.toObj(CustomStringUtils.extractPureJson(completeJsonStr), new TypeReference<Map<String, Double>>() {
+                });
+            }
+
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("Failed to call Ollama API", e);
         }
     }
 

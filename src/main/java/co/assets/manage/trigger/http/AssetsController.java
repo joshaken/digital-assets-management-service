@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.*;
 @Slf4j
 @RestController
 @RequestMapping("/api")
-public class AssetsController extends BaseController {
+public class AssetsController {
 
     @Resource
     private IAssetService assetService;
@@ -28,12 +28,12 @@ public class AssetsController extends BaseController {
      * アセット登録
      *
      * @param createAssetRequest アセット info
-     * @return 保存成功可否
+     * @return 保存が成功したかどうか
      */
     @PostMapping("/assets")
     public Result<Void> create(@Validated @RequestBody CreateAssetRequest createAssetRequest) {
         log.info("api/assets request{}", createAssetRequest);
-        //转换成创建类，并设置新增asset时必备的参数
+        //作成用クラスに変換し、新規Asset作成時に必要なパラメータを設定
         AssetDO assetDO = AssetConverter.INSTANCE.reqTransToDO(createAssetRequest);
         assetService.create(assetDO);
         return Result.ok();
@@ -49,10 +49,10 @@ public class AssetsController extends BaseController {
     @GetMapping("/assets/search")
     public Result<PageResult<SearchAssetResponse>> search(QueryAssetRequest queryAssetRequest) {
         log.info("api/assets/search request{}", queryAssetRequest);
-        //转换成对象进行传递查询，通过lastPageMaxId自动判断是否需要使用特殊的分页查询
+        //オブジェクトに変換して伝達・検索し、lastPageMaxIdを使って特殊なページングクエリの必要性を自動判断
         AssetsQueryCondition assetsQueryCondition = TagConverter.INSTANCE.transToQueryCondition(queryAssetRequest);
         Page<AssetDO> assetPage = assetService.pageQueryByTagName(assetsQueryCondition);
-        //转换成对外暴露的对象
+        //外部公開用のオブジェクトに変換
         return Result.ok(
                 PageResult.page(
                         (int) assetPage.getTotalElements(),

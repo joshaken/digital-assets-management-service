@@ -11,7 +11,9 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
 
-
+/**
+ * MQ(rocketMQ) を使って、上流からのタグ追加リクエストを処理
+ */
 @Slf4j
 @Service
 @ConditionalOnProperty(value = "config.tag.add", havingValue = "mq")

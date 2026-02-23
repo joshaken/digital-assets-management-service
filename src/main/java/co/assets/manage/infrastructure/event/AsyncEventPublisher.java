@@ -7,10 +7,12 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
+/**
+ * SpringのEvent機構を使って、上流からのタグ追加リクエストを処理
+ */
 @Service
 @ConditionalOnProperty(value = "config.tag.add", havingValue = "event", matchIfMissing = true)
 public class AsyncEventPublisher implements AssetAddTagPublisher {
-
 
     @Resource
     private ApplicationEventPublisher eventPublisher;

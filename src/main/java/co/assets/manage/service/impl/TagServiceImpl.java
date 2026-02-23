@@ -12,7 +12,6 @@ import co.assets.manage.infrastructure.ai.AiTagClient;
 import co.assets.manage.infrastructure.storage.ImageQueryClient;
 import co.assets.manage.service.ITagService;
 import co.assets.manage.service.workflow.AssetProcessingContext;
-import co.assets.manage.utils.CustomStringUtils;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -40,60 +39,64 @@ public class TagServiceImpl implements ITagService {
 
     @Override
     public void addTag(Long assetId, String filePath) {
-        //获取所有的标签
+        //すべてのタグを取得
         Map<String, Long> tagIdMap = queryTagAndIdMap();
-        //生成打标签处理流对象
+        //タグ付け処理フロー用のコンテキストオブジェクトを構築
         AssetProcessingContext context = new AssetProcessingContext(assetId, filePath, tagIdMap);
         assetProcess(context);
     }
 
     /**
-     * 简化的责任链模式处理打标签的流程，
-     * 分别包括读取图片具体数据和调用AI获取对应的标签，每一步失败都会导致执行链结束，后续可以改成执行链List的执行逻辑
+     * 簡易版のチェーン・オブ・レスポンシビリティでタグ付け処理フローを実装。
+     * 画像データを読み取るステップと、AIを呼び出して対応するタグを取得するステップの2つを含む。
+     * 各ステップで失敗するとチェーンの実行は終了する。
+     * 将来的にステップが3つ以上になる場合は、本格的なチェーン・オブ・レスポンシビリティとして抽象化可能。
      *
-     * @param context 责任链上下文
+     * @param context チェーン・オブ・レスポンシビリティ のコンテキスト
      */
     private void assetProcess(AssetProcessingContext context) {
         Long assetId = context.getAssetId();
         Map<String, Long> tagIdMap = context.getTagIdMap();
-        //加载图片信息
+        //画像情報を読み込む
         processImageLoad(context);
-        //当前步骤是否成功
+        //現在のステップが成功したかどうか
         if (Boolean.TRUE.equals(context.getSuccess())) {
-            //获取标签
+            //タグを取得
             processTagsByAi(context);
-            //当前步骤是否成功
+            //現在のステップが成功したかどうか
             if (Boolean.TRUE.equals(context.getSuccess())) {
-                //保存标签和asset的映射关系
+                //タグとAssetのマッピング関係を保存
                 Timestamp currentTime = Timestamp.valueOf(LocalDateTime.now());
                 List<AssetTagDO> assetTagDOList = tagIdMap.entrySet()
                         .stream()
-                        //过滤掉不可用标签
+                        //利用できないタグをフィルタリング
                         .filter(allowTag -> context.getTagsConfidenceMap().containsKey(allowTag.getKey()))
                         .map(allowSet ->
-                                //转换成tag和asset的映射类
+                                //タグとAssetのマッピングクラスに変換
                                 AssetTagRich.ofAi(assetId, allowSet.getValue()
                                         , context.getTagsConfidenceMap().get(allowSet.getKey())
                                         , currentTime))
                         .toList();
                 iAssetTagRepository.batchCreate(assetTagDOList);
-                //更新asset的标签状态
+                //Assetのタグ付けステータスを更新
                 iAssetRepository.updateTagStatus(assetId, AiTagStatusEnum.SUCCESS, "");
             }
         }
         if (Boolean.FALSE.equals(context.getSuccess())) {
-            //更新asset的标签状态
+            //Assetのタグ付けステータスを失敗に更新
             iAssetRepository.updateTagStatus(assetId, AiTagStatusEnum.FAILED, context.getFailReason());
         }
 
         if (Boolean.TRUE.equals(context.getIncrRetry())) {
-            //增加asset的重试次数
+            //Assetのタグ付けリトライ回数を増加
             iAssetRepository.updateRetryCount(assetId);
         }
     }
 
     /**
-     * @param context
+     * 画像情報を読み込む process
+     *
+     * @param context 　チェーン・オブ・レスポンシビリティ のコンテキスト
      */
     private void processImageLoad(AssetProcessingContext context) {
         try {
@@ -102,50 +105,56 @@ public class TagServiceImpl implements ITagService {
 
         } catch (Exception e) {
 
-            log.error("addTag getImage failed {}", e.getMessage(), e);
+            log.error("TagServiceImpl processImageLoad failed {}", e.getMessage(), e);
             context.addFailReason("GetImage failed: " + e.getMessage());
         }
     }
 
     /**
-     * @param context
+     * 外部AIサービスを呼び出して画像のタグを取得
+     *
+     * @param context 　チェーン・オブ・レスポンシビリティ のコンテキスト
      */
     private void processTagsByAi(AssetProcessingContext context) {
         try {
             Map<String, Double> tagsConfidenceMap = aiTagClient.identifyTags(
                     context.getImage()
-                    , CustomStringUtils.getMimeTypeFromExtension(context.getFilePath())
                     , context.getTagIdMap().keySet());
 
             context.setTagsConfidenceMap(tagsConfidenceMap);
 
         } catch (Exception e) {
-            log.error("addTag identifyTags failed {}", e.getMessage(), e);
+            log.error("TagServiceImpl processTagsByAi failed {}", e.getMessage(), e);
             context.addFailReason("IdentifyTags failed: " + e.getMessage());
 
         }
     }
 
     private Map<String, Long> queryTagAndIdMap() {
-        //获取所有的标签, 这里后面可以改成从缓存中获取所有的标签
+        //すべてのタグを取得。将来的にはキャッシュから取得するように変更可能
         List<TagDO> tagDOList = iTagRepository.findAllNotDeletedTag();
 
-        log.info("find undeleted tag count [{}]", tagDOList.size());
-        //获取tagName和tageId的映射map
+        log.info("Find all undeleted tag count [{}]", tagDOList.size());
+        //tagNameとtagIdのマッピングMapを作成
         return tagDOList.stream()
                 .collect(Collectors.toMap(TagDO::getName, TagDO::getId, (existing, replacement) -> existing));
     }
 
     @Override
     public void retryAddTag(List<AssetDO> assetDOList) {
-        //获取所有的标签，后续进行复用，避免重复查询
+        //すべてのタグを取得し、後で再利用して重複クエリを避ける
         Map<String, Long> tagIdMap = queryTagAndIdMap();
 
         assetDOList.forEach(asset -> {
-            AssetProcessingContext context = new AssetProcessingContext(asset.getId(), asset.getFilePath(), tagIdMap);
-            //无论是否处理成功，更新重试次数+1
-            context.setIncrRetry(Boolean.TRUE);
-            assetProcess(context);
+            //例外をキャッチして、後続のAsset処理がブロックされないようにする
+            try {
+                AssetProcessingContext context = new AssetProcessingContext(asset.getId(), asset.getFilePath(), tagIdMap);
+                //処理の成否にかかわらず、リトライ回数を+1更新
+                context.setIncrRetry(Boolean.TRUE);
+                assetProcess(context);
+            } catch (Exception e) {
+                log.info("retryAddTag AssetId[{}] AssetFilePath[{}] process failed {}", asset.getId(), asset.getFilePath(), e.getMessage());
+            }
         });
     }
 

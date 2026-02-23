@@ -9,16 +9,12 @@ import java.util.List;
 public interface CustomBatchRepository<T> {
 
     /**
-     * 批量保存
-     * @param entities
-     * @return
+     * 一括保存
      */
     List<T> batchSave(Collection<T> entities);
 
     /**
-     * 批量修改
-     * @param entities
-     * @return
+     * 一括更新
      */
     int batchUpdate(Collection<T> entities);
 }

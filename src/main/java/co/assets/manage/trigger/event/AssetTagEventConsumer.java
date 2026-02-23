@@ -17,10 +17,13 @@ public class AssetTagEventConsumer {
     @Resource
     private ITagService tagService;
 
+    /**
+     * 非同期で追加されたAssetのメッセージを消費し、Assetにタグを付与
+     */
     @EventListener(value = AssetTagEvent.class)
-//    @Async(AsyncExecutionAspectSupport.DEFAULT_TASK_EXECUTOR_BEAN_NAME)
+    @Async(AsyncExecutionAspectSupport.DEFAULT_TASK_EXECUTOR_BEAN_NAME)
     public void createAsset(AssetTagEvent event) {
-        log.info("接收到创建Asset事件:{}", JsonUtil.toJson(event));
+        log.info("AssetTagEventConsumer received an AssetTagEvent:{}", JsonUtil.toJson(event));
 
         tagService.addTag(event.assetId(), event.filePath());
     }

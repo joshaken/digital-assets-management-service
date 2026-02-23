@@ -5,7 +5,7 @@ package co.assets.manage.domain.event;
  * APIを呼び出してAssetのタグをマッチング
  *
  * @param assetId  assetId
- * @param filePath asset file path
+ * @param filePath asset's file path
  */
 public record AssetTagEvent(Long assetId, String filePath) {
 }

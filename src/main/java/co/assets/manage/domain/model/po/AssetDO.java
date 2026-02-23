@@ -1,6 +1,5 @@
 package co.assets.manage.domain.model.po;
 
-import co.assets.manage.domain.BaseDomain;
 import co.assets.manage.enums.AiTagStatusEnum;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -18,7 +17,7 @@ import java.time.LocalDateTime;
 @Setter
 @ToString
 @NoArgsConstructor
-public class AssetDO extends BaseDomain {
+public class AssetDO extends BaseDO {
 
     @Column(nullable = false)
     @Comment("アセットタイトル")

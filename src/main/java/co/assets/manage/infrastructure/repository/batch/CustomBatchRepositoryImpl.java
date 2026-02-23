@@ -10,10 +10,17 @@ import org.springframework.util.CollectionUtils;
 import java.io.Serializable;
 import java.util.*;
 
+/**
+ * Spring JPAの拡張。複数のSQLを実行するのではなく、真のバッチ保存を可能にする。
+ * デフォルトでは一度に50件保存。
+ *
+ * @param <T>
+ * @param <ID>
+ */
 @Service
 public class CustomBatchRepositoryImpl<T, ID extends Serializable> implements CustomBatchRepository<T> {
 
-    @Value("${batchSave.size:100}")
+    @Value("${batchSave.size:50}")
     private Integer BATCH_SIZE;
 
     @PersistenceContext

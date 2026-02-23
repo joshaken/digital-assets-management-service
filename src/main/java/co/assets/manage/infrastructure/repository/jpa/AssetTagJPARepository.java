@@ -8,6 +8,9 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+/**
+ * (asset_tag) データベースとやり取りするJPAの実装
+ */
 @Repository
 public interface AssetTagJPARepository extends JpaRepository<AssetTagDO, Long>
         , JpaSpecificationExecutor<AssetTagDO>

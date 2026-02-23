@@ -10,7 +10,6 @@ import co.assets.manage.utils.converter.AssetConverter;
 import jakarta.annotation.Resource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
@@ -28,31 +27,32 @@ public class AssetServiceImpl implements IAssetService {
 
     @Override
     public void create(AssetDO createAssetRequest) {
-        //这里直接保存数据库，真实情况可能会出现用户上传了重复的素材的问题需要进行逻辑校验
+        //ここでは直接データベースに保存しているが、実際にはユーザーが重複した素材をアップロードする可能性があるため、ロジックによる検証が必要
         AssetDO newAssetDO = iAssetRepository.save(createAssetRequest);
-        //异步调用第三方AI，这里使用一个通用接口，后续可以改成发送MQ消息，在消费方再进行外部AI接口调用
+        //サードパーティAIを非同期で呼び出す。ここでは汎用インターフェースを使用しているが、
+        //将来的にはMQメッセージを送信し、コンシューマ側で外部AIインターフェースを呼び出すように変更可能
         assetAddTagPublisher.sendCreateAssetEvent(AssetConverter.INSTANCE.transToEvent(newAssetDO));
     }
 
     @Override
     public Page<AssetDO> pageQueryByTagName(AssetsQueryCondition queryCondition) {
 
-        //如果未传递lastPageMaxId,需要直接使用简单的联表查询，主要注意SQL是否有走索引
-        //分页查询，先拿到标签对应的标签ID，这里可以改成前端请求中直接传递tagId而不是tagName
+        //まずタグに対応するタグIDを取得する。ここは、フロントエンドからtagNameではなく直接tagIdを渡すように変更可能
         Long tagId = iTagRepository.findTagIdByName(queryCondition.getTag());
         if (tagId == null) {
             return Page.empty();
         }
-        List<AssetDO> assetDOList;
-        //如果未传递lastPageMaxId，代码项目数据变大，需要对分页查询做额外处理
         queryCondition.setTagId(tagId);
+        List<AssetDO> assetDOList;
+        //lastPageMaxIdが渡されていない場合
         if (Objects.isNull(queryCondition.getLastPageMaxId())) {
             assetDOList = iAssetRepository.findAssetByTagId(queryCondition);
         } else {
-            //通过 > 上一页最大ID limit 页数获取数据
+            //lastPageMaxIdが渡されている場合, 前ページの最大IDとlimitを使ってデータを取得
             assetDOList = iAssetRepository.findAssetByMinId(queryCondition);
         }
-        //单独获取总条数数据,这里的总页数，后面可以做成从Redis缓存中获取
+        // 総件数を個別に取得。
+        // ここでの総ページ数は、後でRedisキャッシュから取得するように変更可能
         Long count = iAssetRepository.countByTagId(queryCondition.getTagId());
         return new PageImpl<>(assetDOList
                 , Pageable.ofSize(queryCondition.getPageSize())

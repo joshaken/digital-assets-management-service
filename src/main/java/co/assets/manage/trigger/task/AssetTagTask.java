@@ -3,15 +3,17 @@ package co.assets.manage.trigger.task;
 import co.assets.manage.domain.model.po.AssetDO;
 import co.assets.manage.domain.repository.IAssetRepository;
 import co.assets.manage.enums.AiTagStatusEnum;
-import co.assets.manage.service.IAssetService;
 import co.assets.manage.service.ITagService;
 import com.xxl.job.core.handler.annotation.XxlJob;
 import jakarta.annotation.Resource;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 
 import java.util.List;
 
 @Component
+@Slf4j
 public class AssetTagTask {
 
     @Resource
@@ -19,11 +21,17 @@ public class AssetTagTask {
     @Resource
     private ITagService iTagService;
 
-    //这里可以使用xxl-job类似的外部的可配置的定时任务框架，这里暂时使用spring自带的定时任务
-    //    @XxlJob("assetTag")
+    /**
+     * タグ付けに失敗したAssetデータを定期タスクで処理, 5分ごとに実行するよう設定可能
+     */
+    @XxlJob("assetTag")
     public void assetAddTagTask() {
-        //查询前30个未打标签的asset, 并且重试次数为小于2
+        //タグ付けに失敗したAssetのうち、リトライ回数が2未満の最初の30件を取得
         List<AssetDO> failedAssetList = iAssetRepository.findAssetByStatusAndRetryCount(AiTagStatusEnum.FAILED, 2, 30);
+        if (CollectionUtils.isEmpty(failedAssetList)) {
+            log.info("AssetTagTask");
+            return;
+        }
         iTagService.retryAddTag(failedAssetList);
 
     }

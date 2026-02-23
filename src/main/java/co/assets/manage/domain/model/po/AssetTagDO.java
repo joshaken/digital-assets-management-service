@@ -1,6 +1,5 @@
 package co.assets.manage.domain.model.po;
 
-import co.assets.manage.domain.BaseDomain;
 import co.assets.manage.enums.TagSourceEnum;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -16,7 +15,7 @@ import org.hibernate.annotations.Comment;
 @Entity(name = "asset_tag")
 @Table(name = "asset_tag")
 @Comment("アセットとタグの関連付けテーブル")
-public class AssetTagDO extends BaseDomain {
+public class AssetTagDO extends BaseDO {
 
     @Column(name = "asset_id", nullable = false)
     @Comment("アセットID")

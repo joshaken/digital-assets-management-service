@@ -1,3 +1,4 @@
+-- asset_tag のテストデータ
 INSERT INTO asset_tag (asset_id, tag_id, source, confidence_score, deleted)
 VALUES (1, 1, 'AI', 0.94, FALSE),
        (1, 6, 'AI', 0.92, FALSE),

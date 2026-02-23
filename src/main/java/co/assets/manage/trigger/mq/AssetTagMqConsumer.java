@@ -25,15 +25,20 @@ public class AssetTagMqConsumer implements RocketMQListener<AssetTagEvent> {
     @Resource
     private ITagService tagService;
 
+    /**
+     * MQ(rocketMQ)で追加されたAssetのメッセージを消費し、Assetにタグを付与
+     *
+     * @param assetTagEvent message
+     */
     @Override
     public void onMessage(AssetTagEvent assetTagEvent) {
-        log.info("接收到创建Asset mq msg:{}", JsonUtil.toJson(assetTagEvent));
+        log.info("AssetTagMqConsumer received a AssetTagEvent mq msg:{}", JsonUtil.toJson(assetTagEvent));
         try {
 
             tagService.addTag(assetTagEvent.assetId(), assetTagEvent.filePath());
 
         } catch (Exception e) {
-            log.error("接收到创建Asset mq error:{}", e.getMessage(), e);
+            log.error("AssetTagMqConsumer process AssetTagEvent mq error:{}", e.getMessage(), e);
         }
     }
 }

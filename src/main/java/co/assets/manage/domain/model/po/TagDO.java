@@ -1,7 +1,6 @@
 package co.assets.manage.domain.model.po;
 
 
-import co.assets.manage.domain.BaseDomain;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
@@ -18,7 +17,7 @@ import org.hibernate.annotations.Comment;
 @Entity(name = "tag")
 @Table(name = "tag")
 @Comment("タグ情報を管理するテーブル")
-public class TagDO extends BaseDomain {
+public class TagDO extends BaseDO {
 
     @Column(nullable = false, length = 100)
     @Comment("タグ名称")

@@ -84,6 +84,7 @@ COMMENT ON COLUMN asset_tag.delete_time IS '論理削除日時（削除された
 COMMENT ON COLUMN asset_tag.deleted IS '論理削除フラグ（0：有効、1：削除済み）';
 
 -- tag -> asset
--- 这里先使用普通组合索引，暂时不使用 UNIQUE index, 如果加上unique index之后需要增加delete_id字段来避免数据不能逻辑删除
+-- ここでは一時的に通常の複合インデックスを使用し、UNIQUEインデックスは使用しません。
+-- UNIQUEインデックスを追加する場合、論理削除を可能にするためにdelete_idフィールドを追加する必要があります。
 CREATE INDEX idx_tag_asset_id ON asset_tag (tag_id, asset_id, deleted);
 CREATE INDEX idx_asset_id ON asset_tag (asset_id, deleted);

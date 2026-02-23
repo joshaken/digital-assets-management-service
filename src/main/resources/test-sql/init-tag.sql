@@ -1,3 +1,4 @@
+-- tag のテストデータ
 INSERT INTO tag (id, name, category)
 VALUES (1, 'Commercial', 'ContentType'),
        (2, 'Documentary', 'ContentType'),

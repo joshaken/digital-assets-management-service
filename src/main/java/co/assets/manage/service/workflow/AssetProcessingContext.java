@@ -7,6 +7,9 @@ import lombok.ToString;
 
 import java.util.Map;
 
+/**
+ * Assetフロー処理用のコンテキスト
+ */
 @Getter
 @Setter
 @ToString
@@ -22,7 +25,7 @@ public class AssetProcessingContext {
 
 
     public AssetProcessingContext(Long assetId, String filePath, Map<String, Long> tagIdMap) {
-        //默认成功
+        //デフォルトは成功
         this.success = Boolean.TRUE;
         this.assetId = assetId;
         this.filePath = filePath;
@@ -33,7 +36,7 @@ public class AssetProcessingContext {
 
     public void addFailReason(String reason) {
         this.failReason = CustomStringUtils.truncateToFailReasonMaxLen(reason);
-        // 有失败原因就标记为失败
+        // 失敗原因がある場合は失敗としてマーク
         this.success = Boolean.FALSE;
     }
 }

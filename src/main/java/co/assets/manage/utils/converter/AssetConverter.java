@@ -10,6 +10,9 @@ import org.mapstruct.Mappings;
 import org.mapstruct.ReportingPolicy;
 import org.mapstruct.factory.Mappers;
 
+/**
+ * MapStructを使用してオブジェクトを変換
+ */
 @Mapper(unmappedTargetPolicy = ReportingPolicy.WARN)
 public interface AssetConverter {
     AssetConverter INSTANCE = Mappers.getMapper(AssetConverter.class);

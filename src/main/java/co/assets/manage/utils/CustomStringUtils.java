@@ -10,11 +10,11 @@ import java.util.regex.Pattern;
 
 public class CustomStringUtils {
     /**
-     * 将输入字符串截取为最大长度限制
+     * 入力文字列を最大長に制限して切り取る
      *
-     * @param input     待处理的字符串
-     * @param maxLength 最大长度，例如 500
-     * @return 截取后的字符串，如果 input 为 null，返回 null
+     * @param input     処理対象の文字列
+     * @param maxLength 最大長
+     * @return 切り取った文字列。inputがnullの場合はnullを返す
      */
     public static String truncateToMaxLength(String input, int maxLength) {
         if (input == null) {
@@ -32,13 +32,13 @@ public class CustomStringUtils {
 
 
     /**
-     * 根据文件路径或文件名后缀返回对应的 MediaType 值
-     * 支持常见图像：jpg/jpeg, png, gif, webp 等
-     * 默认返回 image/jpeg
+     * ファイルパスやファイル名の拡張子に基づいて対応するMediaTypeを返す
+     * 一般的な画像形式に対応：jpg/jpeg, png, gif, webpなど
+     * デフォルトはimage/jpegを返す
      */
     public static String getMimeTypeFromExtension(String filePath) {
         if (filePath == null || filePath.trim().isEmpty()) {
-            return MediaType.IMAGE_JPEG_VALUE; // 默认 JPEG
+            return MediaType.IMAGE_JPEG_VALUE;
         }
 
         String fileName = filePath.toLowerCase(Locale.ROOT);
@@ -53,17 +53,17 @@ public class CustomStringUtils {
             case "jpg", "jpeg", "jpe" -> MediaType.IMAGE_JPEG_VALUE;     // image/jpeg
             case "png" -> MediaType.IMAGE_PNG_VALUE;      // image/png
             case "gif" -> MediaType.IMAGE_GIF_VALUE;      // image/gif
-            case "webp" -> "image/webp";                    // Ollama
+            case "webp" -> "image/webp";
             case "bmp" -> "image/bmp";
             default -> MediaType.IMAGE_JPEG_VALUE;     //  JPEG
         };
     }
 
     /**
-     * 提前字符串总的json
+     * 文字列から最初の完全なJSONを抽出
      *
-     * @param str
-     * @return
+     * @param str string
+     * @return json str
      */
     public static String extractPureJson(String str) {
         Pattern jsonPattern = Pattern.compile("\\{.*?}", Pattern.DOTALL);
@@ -71,7 +71,7 @@ public class CustomStringUtils {
         if (matcher.find()) {
             return matcher.group();
         } else {
-            throw new BizException("未找到 JSON 输出, 原始输出：" + str);
+            throw new BizException("JSON not found, original output:" + str);
         }
     }
 

@@ -9,6 +9,9 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+/**
+ * (tag) データベースとやり取りするJPAの実装
+ */
 @Repository
 public interface TagJPARepository extends JpaRepository<TagDO, Long>, JpaSpecificationExecutor<TagDO> {
 
