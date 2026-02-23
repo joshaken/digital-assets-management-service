@@ -16,7 +16,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @RocketMQMessageListener(
         topic = RocketMqConfig.Topic.ASSET_TAG_AI,
-        consumerGroup = RocketMqConfig.Group.ASSET_TAG_AI,
+        consumerGroup = RocketMqConfig.Group.ASSET_TAG_AI_CONSUMER,
         consumeMode = ConsumeMode.CONCURRENTLY,
         maxReconsumeTimes = 3
 )

@@ -8,6 +8,6 @@ public interface RocketMqConfig {
     }
 
     interface Group {
-        String ASSET_TAG_AI = "assetTagAiGP";
+        String ASSET_TAG_AI_CONSUMER = "asset-tag-consumer-group";
     }
 }

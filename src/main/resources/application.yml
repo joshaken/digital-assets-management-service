@@ -1,6 +1,6 @@
 spring:
   application:
-    name: digital-assets-management-service
+    name: dam-service
   profiles:
     active: dev
 
@@ -9,5 +9,7 @@ config:
   #  どの実装クラスを通じて外部AIサービスを呼び出すか (http/spring)
   ai: http
   tag:
-  #  どの実装クラスを通じてタグ追加イベントを送信するか (event/mq)
+    #  どの実装クラスを通じてタグ追加イベントを送信するか (event/mq)
     add: event
+  #  どの実装クラスを通じて定時タスクを実行するか(xxl)
+#  task: xxl

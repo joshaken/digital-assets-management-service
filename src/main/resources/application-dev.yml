@@ -38,3 +38,28 @@ spring:
 logging:
   level:
     org.hibernate.orm.connections.pooling: WARN
+xxl:
+  job:
+    executor:
+      appname: ${spring.application.name}
+      logpath: ${spring.application.name}/xxl-job
+      logretentiondays: 30
+      port: 0
+    admin:
+      addresses: http://127.0.0.1:8080/xxl-job-admin
+    accessToken: c9%a16ft#pQoQH2X^ElMyzLyox9o2$dX
+rocketmq:
+#  consumer:
+#    group: asset-tag-consumer-group
+#    pull-batch-size: 20
+  name-server: 10.5.103.6:9876
+  producer:
+    # 同じ種類のメッセージは同じグループに設定し、ユニーク性を保証
+    group: asset-tag-producer-group
+    sendMessageTimeout: 10000
+    retryTimesWhenSendFailed: 2
+    retryTimesWhenSendAsyncFailed: 2
+#    maxMessageSize: 4096
+#    compressMessageBodyThreshold: 4096
+    # 内部で送信失敗時に別のブローカーへリトライするかどうか。デフォルトはfalse。
+#    retryNextServer: false
