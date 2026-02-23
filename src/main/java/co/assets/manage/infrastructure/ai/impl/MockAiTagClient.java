@@ -13,7 +13,7 @@ import java.util.Set;
  * AIインターフェースの呼び出しをシミュレート、インターフェースロジックのテストに使用可能
  */
 @Service
-@ConditionalOnProperty(value = "config.ai", havingValue = "mock", matchIfMissing = true)
+@ConditionalOnProperty(value = "config.ai.method", havingValue = "mock", matchIfMissing = true)
 public class MockAiTagClient implements AiTagClient {
     private final Random random = new Random();
 

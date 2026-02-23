@@ -31,3 +31,15 @@ VALUES (5, 5, 'AI', 0.92, FALSE),
 INSERT INTO asset_tag (asset_id, tag_id, source, confidence_score, deleted)
 VALUES (6, 10, 'AI', 0.60, FALSE),
        (6, 30, 'AI', 0.55, FALSE);
+
+INSERT INTO asset_tag (asset_id, tag_id, source, confidence_score, deleted)
+VALUES (7, 1, 'AI', 0.60, FALSE),
+       (8, 1, 'AI', 0.55, FALSE),
+       (9, 1, 'AI', 0.55, FALSE),
+       (10, 1, 'AI', 0.55, FALSE),
+       (11, 1, 'AI', 0.55, FALSE),
+       (12, 1, 'AI', 0.55, FALSE),
+       (13, 1, 'AI', 0.55, FALSE),
+       (14, 1, 'AI', 0.55, FALSE),
+       (15, 1, 'AI', 0.55, FALSE)
+;

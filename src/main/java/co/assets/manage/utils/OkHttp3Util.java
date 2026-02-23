@@ -145,7 +145,7 @@ public class OkHttp3Util {
                 return JsonUtil.toObj(completeJsonStr, new TypeReference<Map<String, Double>>() {
                 });
             } catch (Exception e) {
-                log.error("Failed to parse tag output into Map<String, Double>. Original output: " + completeJsonStr);
+                log.warn("Failed to parse original tag output into Map<String, Double>. Original output: {} try extract json ", completeJsonStr);
                 return JsonUtil.toObj(CustomStringUtils.extractPureJson(completeJsonStr), new TypeReference<Map<String, Double>>() {
                 });
             }

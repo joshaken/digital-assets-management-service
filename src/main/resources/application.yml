@@ -6,8 +6,9 @@ spring:
 
 # カスタム設定
 config:
-  #  どの実装クラスを通じて外部AIサービスを呼び出すか (http/spring)
-  ai: http
+  ai:
+    #  どの実装クラスを通じて外部AIサービスを呼び出すか (mock/http/spring)
+    method: spring
   tag:
     #  どの実装クラスを通じてタグ追加イベントを送信するか (event/mq)
     add: event

@@ -23,7 +23,7 @@ import java.util.Map;
 import java.util.Set;
 
 @Slf4j
-@ConditionalOnProperty(value = "config.ai", havingValue = "spring")
+@ConditionalOnProperty(value = "config.ai.method", havingValue = "spring")
 @Service
 public class OllamaAiTagSpringAIClient implements AiTagClient {
 
@@ -89,7 +89,7 @@ public class OllamaAiTagSpringAIClient implements AiTagClient {
         try {
             return outputConverter.convert(outputText);
         } catch (Exception e) {
-            log.error("Failed to parse tags, output as Map<String, Double> (original output: {})" , outputText);
+            log.error("Failed to parse tags, output as Map<String, Double> (original output: {}) [try extract json]" , outputText);
             return outputConverter.convert(CustomStringUtils.extractPureJson(outputText));
         }
     }

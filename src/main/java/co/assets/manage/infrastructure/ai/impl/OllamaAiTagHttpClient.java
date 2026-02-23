@@ -17,7 +17,7 @@ import java.util.Map;
 import java.util.Set;
 
 @Slf4j
-@ConditionalOnProperty(value = "config.ai", havingValue = "http")
+@ConditionalOnProperty(value = "config.ai.method", havingValue = "http")
 @Service
 public class OllamaAiTagHttpClient implements AiTagClient {
 
@@ -27,10 +27,14 @@ public class OllamaAiTagHttpClient implements AiTagClient {
     @Value("${spring.ai.ollama.base-url}")
     private String baseUrl;
     private final PromptTemplate userPrompt;
+    private final PromptTemplate sysPrompt;
 
-    public OllamaAiTagHttpClient(@Value("classpath:prompts/asset-tag-evaluation-user.st") org.springframework.core.io.Resource userPromptResource
+    public OllamaAiTagHttpClient(
+            @Value("classpath:prompts/asset-tag-evaluation-user.st") org.springframework.core.io.Resource userPromptResource,
+            @Value("classpath:prompts/asset-tag-evaluation-sys.st") org.springframework.core.io.Resource sysPromptResource
     ) throws IOException {
         this.userPrompt = new PromptTemplate(userPromptResource.getContentAsString(StandardCharsets.UTF_8));
+        this.sysPrompt = new PromptTemplate(sysPromptResource.getContentAsString(StandardCharsets.UTF_8));
     }
 
     @Resource
@@ -46,6 +50,7 @@ public class OllamaAiTagHttpClient implements AiTagClient {
                 Base64.getEncoder().encodeToString(imageBytes)
                 , model
                 , fullPrompt
+                , sysPrompt.getTemplate()
         );
 
         return okHttp3Util.getTagsByPostJson(baseUrl + "/api/chat ", reqBody);

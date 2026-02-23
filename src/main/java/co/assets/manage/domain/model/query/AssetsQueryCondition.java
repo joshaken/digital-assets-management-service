@@ -5,6 +5,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
+import java.util.Optional;
+
 @NoArgsConstructor
 @Getter
 @Setter
@@ -22,7 +24,9 @@ public class AssetsQueryCondition {
     private Long lastPageMaxId;
 
     public Integer getOffset() {
-        return (this.getPageIndex() - 1) * this.getPageSize();
+        int page = Optional.ofNullable(pageIndex).filter(p -> p >= 1).orElse(1);
+        int size = Optional.ofNullable(pageSize).filter(s -> s >= 1).orElse(20);
+        return (page - 1) * size;
     }
 
 
