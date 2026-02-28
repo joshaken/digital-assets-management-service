@@ -1,5 +1,7 @@
 # AI自動タグ付け機能を想定した画像アセット管理API
 
+[TOC]
+
 ## 1. プロジェクト概要
 
 本プロジェクトは、「デジタルアセット管理（DAM）」機能を想定し、
@@ -43,75 +45,21 @@
 
 責務分離を明確化し、拡張容易性を確保している。
 
-### 3.2 各レイヤの責務
-
 ------
 
-#### domain層
-
-- aggregates … 集約ルート
-- po … Entity
-- query … 検索専用モデル
-- repository … Repositoryインターフェース
-- event … ドメインイベント
-
-設計意図：
-
-ドメインロジックをインフラ依存から分離し、
-テスト容易性と拡張性を確保。
-
-------
-
-#### service層
-
-- 業務ユースケース実装
-- workflowパッケージで業務フロー分離
-- IAssetService / ITagServiceでインターフェース抽象化
-
-設計意図：
-
-アプリケーションロジックを集約し、
-将来的なマイクロサービス分割を想定。
-
-------
-
-#### infrastructure層
-
-- ai … AI呼び出し実装
-- mq … RocketMQ連携
-- repository … JPA実装
-- storage … 将来的な外部ストレージ拡張
-
-設計意図：
-
-外部システム依存を隔離。
-
-------
-
-#### trigger層
-
-- http … REST Controller
-- mq … MQ Consumer
-- task … 定期バッチ（XXL-Job）
-- Event... イベント消費
-
-設計意図：
-
-システム外部との接点を明確に分離。
-
-------
-
-## 3.3 アセット登録フロー（mqモード）
+## 3.2 アセット登録フロー（mqモード）
 
 ```mermaid
 flowchart TD
     A[Client] --> B[AssetsController]
-    B --> C[AssetConverter]
-    C --> D[AssetService]
-    D --> E[(DB: asset保存)]
-    E --> F[ai_tag_status = PENDING]
-    D --> G[RocketMQ送信]
-    B --> H[即時レスポンス]
+    subgraph Controller内部
+        B --> C[AssetConverter]
+        C --> D[AssetService]
+        D --> E[(DB: asset保存)]
+        E --> F[ai_tag_status = PENDING]
+        D --> G[RocketMQ送信]
+        G --> H[即時レスポンス]
+    end
     G --> I[AssetTagMqConsumer]
     I --> J[TagService.addTag]
     J --> K{処理成功?}
@@ -120,7 +68,7 @@ flowchart TD
     K -->|失敗| N[ai_tag_status = FAILED]
 ```
 
-## 3.4 AIタグ付与内部処理フロー
+## 3.3 AIタグ付与内部処理フロー
 
 ```mermaid
 flowchart TD
@@ -138,7 +86,7 @@ flowchart TD
     K --> L[ai_tag_status = SUCCESS]
 ```
 
-## 3.5 XXL-Jobリトライフロー
+## 3.4 XXL-Jobリトライフロー
 
 ```mermaid
 flowchart TD
@@ -155,7 +103,7 @@ flowchart TD
     G --> L[retry_count +1]
 ```
 
-## 3.6 タグ検索フロー
+## 3.5 タグ検索フロー
 
 ```mermaid
 flowchart TD
@@ -171,76 +119,9 @@ flowchart TD
     I --> J[PageResult返却]
 ```
 
-# 4. 非同期設計
+# 4 API設計
 
-------
-
-## 4.1 動作モード
-
-タグ付与方式は設定により切替可能。
-
-* event モード（デフォルト）:
-  Spring ApplicationEvent による非同期実行。
-
-* mq モード:
-  RocketMQ経由で非同期実行。
-
-## 4.2 アセット登録フロー（mqモード）
-
-```mermaid
-flowchart TD
-    A[Client] --> B[Controller]
-    subgraph Controller内部
-        B --> C[DB保存: PENDING]
-        C --> D[MQ送信]
-        B --> E[即時レスポンス]
-    end
-    D --> F[Consumer]
-    F --> G[TagService]
-    G --> H{成功?}
-    H -->|Yes| I[DB更新: SUCCESS]
-    H -->|No| J[DB更新: FAILED]
-```
-
-------
-
-## 4.3 リトライ設計
-
-### 初回実行
-
-- retry_countは増加しない
-- 失敗時は ai_tag_status を FAILED に更新
-
-------
-
-### 再実行方式（XXL-Job）
-
-FAILED状態のデータを定期バッチで再処理する。
-
-実行条件：
-
-```
-WHERE ai_tag_status = 'FAILED'
-AND ai_tag_retry_count < 2
-AND deleted = false
-```
-
-- 5分毎に実行可能
-- 最大2回まで再試行
-- 再試行時に ai_tag_retry_count を +1 更新
-- 成功時は ai_tag_status を SUCCESS に更新
-
-使用インデックス：
-
-```
-idx_tag_retry (ai_tag_status, ai_tag_retry_count, deleted)
-```
-
-------
-
-# 5. API設計
-
-## 5.1 アセット登録
+## 4.1 アセット登録
 
 ### Endpoint
 
@@ -250,7 +131,7 @@ POST /api/assets
 
 ### Request Body
 
-```
+```json
 {
   "title": "sample image",
   "filePath": "/images/sample.jpg"
@@ -259,24 +140,16 @@ POST /api/assets
 
 ### バリデーション
 
-| 項目       | 説明           |
-|----------|--------------|
-| title    | 必須 / 最大255文字 |
-| filePath | 必須 / 最大500文字 |
-
-------
-
-### 処理概要
-
-1. DB保存（ai_tag_status = PENDING）
-2. タグ付与イベント送信（設定により切替）
-3. 即時レスポンス返却
+| 項目       | NN | 説明      |
+|----------|----|---------|
+| title    | ○  | 最大255文字 |
+| filePath | ○  | 最大500文字 |
 
 ------
 
 ### Response
 
-```
+```json
 {
   "status": 0,
   "message": "success"
@@ -285,7 +158,7 @@ POST /api/assets
 
 ------
 
-## 5.2 タグ検索
+## 4.2 タグ検索
 
 ### Endpoint
 
@@ -295,12 +168,12 @@ GET /api/assets/search
 
 ### Query Parameter
 
-| パラメータ         | 説明                         |
-|---------------|----------------------------|
-| tag           | 必須                         |
-| pageIndex     | オプション / デフォルト1             |
-| pageSize      | オプション / デフォルト20（最大20）      |
-| lastPageMaxId | オプション / Keyset Pagination用 |
+| パラメータ         | NN | 説明                 |
+|---------------|----|--------------------|
+| tag           | ○  | タグ                 
+| pageIndex     |    | デフォルト1             |
+| pageSize      |    | デフォルト20（最大20）      |
+| lastPageMaxId |    | Keyset Pagination用 |
 
 ------
 
@@ -315,7 +188,7 @@ GET /api/assets/search
 
 ### Response
 
-```
+```json
 {
   "status": 0,
   "message": "success",
@@ -334,9 +207,9 @@ GET /api/assets/search
 }
 ```
 
-# 6. DB設計
+# 5 DB設計
 
-## 6.1 テーブル構成
+## 5.1 テーブル構成
 
 | No | テーブル名     | 論理名      | 概要         |
 |----|-----------|----------|------------|
@@ -344,16 +217,9 @@ GET /api/assets/search
 | 2  | tag       | タグ情報     | タグマスタ管理    |
 | 3  | asset_tag | アセットタグ関連 | 多対多関連管理    |
 
-## 6.2 設計方針
+## 5.2 テーブル定義
 
-- 論理削除採用
-- AI状態管理
-- リトライ制御
-- 複合インデックス設計
-
-## 6.3. テーブル定義
-
-### 6.3.1 asset テーブル
+### 5.2.1 asset テーブル
 
 #### 概要
 
@@ -403,7 +269,7 @@ GET /api/assets/search
 
 ------
 
-### 6.3.2 tag テーブル
+### 5.2.2 tag テーブル
 
 #### 概要
 
@@ -422,14 +288,6 @@ GET /api/assets/search
 
 ------
 
-#### 設計方針
-
-- name は UNIQUE 制約
-- deleted による論理削除管理
-- 将来的にカテゴリ別検索拡張可能
-
-------
-
 #### インデックス設計
 
 | インデックス名          | カラム             | 目的      |
@@ -438,7 +296,7 @@ GET /api/assets/search
 
 ------
 
-### 6.3.3 asset_tag テーブル
+### 5.2.3 asset_tag テーブル
 
 #### 概要
 
@@ -461,15 +319,6 @@ Asset と Tag の多対多関係を管理する中間テーブル。
 
 ------
 
-#### 設計方針
-
-- AIタグとユーザー手動タグを区別するため source を保持
-- 論理削除を採用
-- UNIQUE制約は現時点では未使用
-    - 将来的に一意制約導入を検討可能な構成
-
-------
-
 #### インデックス設計
 
 | インデックス名          | カラム                         | 目的           |
@@ -479,7 +328,7 @@ Asset と Tag の多対多関係を管理する中間テーブル。
 
 ------
 
-### 6.4 ER関係
+### 5.3 ER関係
 
 ```
 Asset（1）—（n）Asset_Tag（n）—（1）Tag
@@ -490,17 +339,9 @@ Asset と Tag は多対多関係。
 
 ------
 
-### 6.5. 論理削除設計
+# 6 実行条件
 
-本システムでは物理削除は行わず、deleted フラグおよび delete_time により論理削除管理を行う。
-
-検索時は deleted = FALSE を条件に含める。
-
-------
-
-# 7. 実行条件
-
-## 7.1 実行環境
+## 6.1 実行環境
 
 本プロジェクトの基本実行環境は以下の通り。
 
@@ -512,26 +353,7 @@ Asset と Tag は多対多関係。
 | メッセージキュー | RocketMQ（利用時のみ必要） |
 | 定期タスク    | XXL-Job（利用時のみ必要）  |
 
-## 7.2 デフォルト構成（ローカル実行）
-
-```
-config:
-  ai:
-    method: spring
-  tag:
-    add: event
-```
-
-### 動作内容
-
-- AI連携：Spring AI
-- 非同期処理：Spring ApplicationEvent
-- RocketMQ：未使用
-- 定期リトライ：無効
-
-ローカル単体確認を目的とした最小構成。
-
-## 7.3 本番想定構成
+## 6.2 本番想定構成
 
 ```
 config:
@@ -553,7 +375,7 @@ config:
 
 ------
 
-## 7.4 設定切替項目
+## 6.3 設定切替項目
 
 本プロジェクトでは、以下の設定により動作方式を切り替えることが可能。
 
@@ -606,7 +428,7 @@ XXL-Jobを利用する場合は、管理画面でジョブ登録が必要。
 
 ------
 
-# 8. 設計上の工夫
+# 7. 設計上の工夫
 
 - DTOとEntityの責務分離
 - MapStructによる型安全な変換処理
@@ -620,7 +442,7 @@ XXL-Jobを利用する場合は、管理画面でジョブ登録が必要。
 - グローバル例外ハンドリングによるエラーハンドリングの一元化
 - 外部複数API連携の段階分離設計による障害影響局所化
 
-# 9. 将来拡張
+# 8. 将来拡張
 
 - S3等の外部ストレージ連携対応
 - Redisによるキャッシュ最適化
