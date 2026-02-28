@@ -1,6 +1,6 @@
-# AI自動タグ付け機能を想定した画像アセット管理API
-
 [TOC]
+
+# AI自動タグ付け機能を想定した画像アセット管理API
 
 ## 1. プロジェクト概要
 
@@ -170,7 +170,7 @@ GET /api/assets/search
 
 | パラメータ         | NN | 説明                 |
 |---------------|----|--------------------|
-| tag           | ○  | タグ                 
+| tag           | ○  | タグ                 |
 | pageIndex     |    | デフォルト1             |
 | pageSize      |    | デフォルト20（最大20）      |
 | lastPageMaxId |    | Keyset Pagination用 |
