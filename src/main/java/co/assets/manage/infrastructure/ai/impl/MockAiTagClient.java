@@ -1,6 +1,7 @@
 package co.assets.manage.infrastructure.ai.impl;
 
-import co.assets.manage.infrastructure.ai.AiTagClient;
+import co.assets.manage.infrastructure.ai.IAiTagService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
@@ -12,9 +13,10 @@ import java.util.Set;
 /**
  * AIインターフェースの呼び出しをシミュレート、インターフェースロジックのテストに使用可能
  */
+@Slf4j
 @Service
 @ConditionalOnProperty(value = "config.ai.method", havingValue = "mock", matchIfMissing = true)
-public class MockAiTagClient implements AiTagClient {
+public class MockAiTagClient implements IAiTagService {
     private final Random random = new Random();
 
     @Override

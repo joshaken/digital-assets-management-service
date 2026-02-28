@@ -2,7 +2,7 @@ package co.assets.manage.infrastructure.mq;
 
 import co.assets.manage.config.RocketMqConfig;
 import co.assets.manage.domain.event.AssetTagEvent;
-import co.assets.manage.infrastructure.ai.AssetAddTagPublisher;
+import co.assets.manage.infrastructure.AssetAddTagPublisher;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.client.producer.SendResult;

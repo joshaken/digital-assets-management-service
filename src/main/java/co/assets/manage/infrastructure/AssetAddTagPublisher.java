@@ -1,4 +1,4 @@
-package co.assets.manage.infrastructure.ai;
+package co.assets.manage.infrastructure;
 
 import co.assets.manage.domain.event.AssetTagEvent;
 

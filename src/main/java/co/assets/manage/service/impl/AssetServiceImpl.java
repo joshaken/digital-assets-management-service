@@ -4,7 +4,7 @@ import co.assets.manage.domain.model.po.AssetDO;
 import co.assets.manage.domain.model.query.AssetsQueryCondition;
 import co.assets.manage.domain.repository.IAssetRepository;
 import co.assets.manage.domain.repository.ITagRepository;
-import co.assets.manage.infrastructure.ai.AssetAddTagPublisher;
+import co.assets.manage.infrastructure.AssetAddTagPublisher;
 import co.assets.manage.service.IAssetService;
 import co.assets.manage.utils.converter.AssetConverter;
 import jakarta.annotation.Resource;

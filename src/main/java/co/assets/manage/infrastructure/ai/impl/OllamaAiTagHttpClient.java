@@ -1,7 +1,7 @@
 package co.assets.manage.infrastructure.ai.impl;
 
 import co.assets.manage.dto.req.OllamaLlama3VisionRequest;
-import co.assets.manage.infrastructure.ai.AiTagClient;
+import co.assets.manage.infrastructure.ai.IAiTagService;
 import co.assets.manage.utils.OkHttp3Util;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
@@ -19,7 +19,7 @@ import java.util.Set;
 @Slf4j
 @ConditionalOnProperty(value = "config.ai.method", havingValue = "http")
 @Service
-public class OllamaAiTagHttpClient implements AiTagClient {
+public class OllamaAiTagHttpClient implements IAiTagService {
 
 
     @Value("${spring.ai.ollama.chat.options.model}")

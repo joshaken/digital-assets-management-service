@@ -1,7 +1,7 @@
 package co.assets.manage.infrastructure.ai.impl;
 
 import co.assets.manage.config.exception.ForwardServiceException;
-import co.assets.manage.infrastructure.ai.AiTagClient;
+import co.assets.manage.infrastructure.ai.IAiTagService;
 import co.assets.manage.utils.CustomStringUtils;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
@@ -25,7 +25,7 @@ import java.util.Set;
 @Slf4j
 @ConditionalOnProperty(value = "config.ai.method", havingValue = "spring")
 @Service
-public class OllamaAiTagSpringAIClient implements AiTagClient {
+public class OllamaAiTagSpringAIClient implements IAiTagService {
 
 
     @Value("${spring.ai.ollama.chat.options.model}")
@@ -89,7 +89,7 @@ public class OllamaAiTagSpringAIClient implements AiTagClient {
         try {
             return outputConverter.convert(outputText);
         } catch (Exception e) {
-            log.error("Failed to parse tags, output as Map<String, Double> (original output: {}) [try extract json]" , outputText);
+            log.error("Failed to parse tags, output as Map<String, Double> (original output: {}) [try extract json]", outputText);
             return outputConverter.convert(CustomStringUtils.extractPureJson(outputText));
         }
     }
