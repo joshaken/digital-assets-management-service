@@ -1,144 +1,147 @@
-# AI自動タグ付け機能を想定した画像アセット管理API
+# Image Asset Management API with AI Auto-Tagging
+> 📄 [日本語版 README](./README.jp.md)
 
-## カタログ
+## Table of Contents
 
-- [1.プロジェクト概要](#1-プロジェクト概要)
-- [2.使用技術](#2-使用技術)
-- [3.アーキテクチャ設計](#3-アーキテクチャ設計)
-- [4.api設計](#4-api設計)
-- [5.db設計](#5-db設計)
-- [6.実行条件](#6-実行条件)
-- [7.設計上の工夫](#7-設計上の工夫)
-- [8.将来拡張](#8-将来拡張)
+- [1. Project Overview](#1-project-overview)
+- [2. Tech Stack](#2-tech-stack)
+- [3. Architecture Design](#3-architecture-design)
+- [4. API Design](#4-api-design)
+- [5. DB Design](#5-db-design)
+- [6. Running the Project](#6-running-the-project)
+- [7. Design Highlights](#7-design-highlights)
+- [8. Future Extensions](#8-future-extensions)
 
-## 1 プロジェクト概要
+---
 
-本プロジェクトは、「デジタルアセット管理（DAM）」機能を想定し、
+## 1. Project Overview
 
-- アセット登録
-- タグ検索
-- AIによる自動タグ付与
+This project implements a lightweight REST API simulating a **Digital Asset Management (DAM)** system, providing:
 
-を提供する軽量REST APIとして実装したものです。
+- Asset registration
+- Tag-based search
+- AI-powered automatic tag assignment
 
-------
+---
 
-## 2 使用技術
+## 2. Tech Stack
 
-| 分類         | 技術                                   |
-|------------|--------------------------------------|
-| 言語         | Java 17                              |
-| フレームワーク    | Spring Boot 3.5                      |
-| ORM        | Spring Data JPA                      |
-| DB         | H2 / MySQL想定                         |
-| 非同期        | RocketMQ     / Spring Event          |
-| 定期実行       | XXL-Job                              |
-| AI連携       | Spring AI （Ollamaのllama3.2-vision利用） |
-| HTTPクライアント | OkHttp3                              |
-| DTO変換      | MapStruct                            |
-| Validation | Spring Validation                    |
+| Category        | Technology                              |
+|-----------------|-----------------------------------------|
+| Language        | Java 17                                 |
+| Framework       | Spring Boot 3.5                         |
+| ORM             | Spring Data JPA                         |
+| Database        | H2 / MySQL (production)                 |
+| Async           | RocketMQ / Spring Event                 |
+| Scheduled Tasks | XXL-Job                                 |
+| AI Integration  | Spring AI (Ollama llama3.2-vision)      |
+| HTTP Client     | OkHttp3                                 |
+| DTO Mapping     | MapStruct                               |
+| Validation      | Spring Validation                       |
 
-------
+---
 
-## 3 アーキテクチャ設計
+## 3. Architecture Design
 
-### 3.1 主要なパッケージ構成
+### 3.1 Package Structure
 
-| パッケージ          | 説明                   |
-|----------------|----------------------|
-| config         | 各種設定                 |
-| domain         | ドメインモデル層             |
-| service        | 業務ロジック層              |
-| infrastructure | 外部連携・永続化層（AI/MQ/DB）  |
-| trigger        | 外部I/F層（HTTP・MQ・Task） |
+| Package        | Description                                          |
+|----------------|------------------------------------------------------|
+| config         | Application configuration                            |
+| domain         | Domain model layer                                   |
+| service        | Business logic layer                                 |
+| infrastructure | External integrations & persistence (AI / MQ / DB)  |
+| trigger        | External interface layer (HTTP / MQ / Scheduled Tasks) |
 
-責務分離を明確化し、拡張容易性を確保している。
+Clear separation of responsibilities ensures extensibility.
 
-------
+---
 
-## 3.2 アセット登録フロー（mqモード）
+### 3.2 Asset Registration Flow (MQ Mode)
 
 ```mermaid
 flowchart TD
     A[Client] --> B[AssetsController]
-    subgraph Controller内部
+    subgraph Controller Internal
         B --> C[AssetConverter]
         C --> D[AssetService]
-        D --> E[(DB: asset保存)]
+        D --> E[(DB: Save Asset)]
         E --> F[ai_tag_status = PENDING]
-        D --> G[RocketMQ送信]
-        G --> H[即時レスポンス]
+        D --> G[Send to RocketMQ]
+        G --> H[Immediate Response]
     end
     G --> I[AssetTagMqConsumer]
     I --> J[TagService.addTag]
-    J --> K{処理成功?}
-    K -->|成功| L[(DB: asset_tag保存)]
+    J --> K{Success?}
+    K -->|Yes| L[(DB: Save asset_tag)]
     L --> M[ai_tag_status = SUCCESS]
-    K -->|失敗| N[ai_tag_status = FAILED]
+    K -->|No| N[ai_tag_status = FAILED]
 ```
 
-## 3.3 AIタグ付与内部処理フロー
+### 3.3 AI Tag Assignment Internal Flow
 
 ```mermaid
 flowchart TD
-    A[TagService.addTag] --> B[AssetProcessingContext生成]
+    A[TagService.addTag] --> B[Create AssetProcessingContext]
     B --> C[processImageLoad]
-    C --> D{画像読み込み成功?}
+    C --> D{Image load success?}
     D -->|No| E[context.success = false]
     E --> F[ai_tag_status = FAILED]
     D -->|Yes| G[processTagsByAi]
-    G --> H{AI呼び出し成功?}
+    G --> H{AI call success?}
     H -->|No| I[context.success = false]
     I --> F
-    H -->|Yes| J[生成asset_tagリスト]
+    H -->|Yes| J[Generate asset_tag list]
     J --> K[(DB: batchCreate)]
     K --> L[ai_tag_status = SUCCESS]
 ```
 
-## 3.4 XXL-Jobリトライフロー
+### 3.4 XXL-Job Retry Flow
 
 ```mermaid
 flowchart TD
-    A[XXL-Job 5分ごと実行] --> B[FAILEDかつ retry<2 のAssetを取得<br/>最大30件]
-    B --> C{ai_tag_status=FAILED<br/>対象データ存在?}
-    C -->|No| D[終了]
-    C -->|Yes| E[RetryAddTag実行]
+    A[XXL-Job every 5 min] --> B[Fetch FAILED assets with retry < 2, max 30]
+    B --> C{FAILED assets exist?}
+    C -->|No| D[End]
+    C -->|Yes| E[Execute RetryAddTag]
     E --> F[AssetProcessingContext.setIncrRetry = TRUE]
-    F --> G[assetProcess実行]
-    G --> H{処理成功?}
-    H -->|成功| I[(DB: asset_tag保存)]
+    F --> G[Execute assetProcess]
+    G --> H{Success?}
+    H -->|Yes| I[(DB: Save asset_tag)]
     I --> J[ai_tag_status = SUCCESS]
-    H -->|失敗| K[ai_tag_status = FAILED]
-    G --> L[retry_count +1]
+    H -->|No| K[ai_tag_status = FAILED]
+    G --> L[retry_count + 1]
 ```
 
-## 3.5 タグ検索フロー
+### 3.5 Tag Search Flow
 
 ```mermaid
 flowchart TD
     A[Client] --> B[AssetsController]
     B --> C[TagConverter]
     C --> D[AssetService]
-    D --> E{lastPageMaxId存在?}
+    D --> E{lastPageMaxId present?}
     E -->|Yes| F[Keyset Pagination]
     E -->|No| G[Offset Pagination]
-    F --> H[(DB検索)]
+    F --> H[(DB Query)]
     G --> H
-    H --> I[Entity -> DTO変換]
-    I --> J[PageResult返却]
+    H --> I[Entity -> DTO]
+    I --> J[Return PageResult]
 ```
 
-# 4 API設計
+---
 
-## 4.1 アセット登録
+## 4. API Design
 
-### Endpoint
+### 4.1 Asset Registration
+
+#### Endpoint
 
 ```
 POST /api/assets
 ```
 
-### Request Body
+#### Request Body
 
 ```json
 {
@@ -147,16 +150,14 @@ POST /api/assets
 }
 ```
 
-### バリデーション
+#### Validation
 
-| 項目       | NN | 説明      |
-|----------|----|---------|
-| title    | ○  | 最大255文字 |
-| filePath | ○  | 最大500文字 |
+| Field    | Required | Description     |
+|----------|----------|-----------------|
+| title    | ✅       | Max 255 chars   |
+| filePath | ✅       | Max 500 chars   |
 
-------
-
-### Response
+#### Response
 
 ```json
 {
@@ -165,37 +166,31 @@ POST /api/assets
 }
 ```
 
-------
+---
 
-## 4.2 タグ検索
+### 4.2 Tag Search
 
-### Endpoint
+#### Endpoint
 
 ```
 GET /api/assets/search
 ```
 
-### Query Parameter
+#### Query Parameters
 
-| パラメータ         | NN | 説明                 |
-|---------------|----|--------------------|
-| tag           | ○  | タグ                 |
-| pageIndex     |    | デフォルト1             |
-| pageSize      |    | デフォルト20（最大20）      |
-| lastPageMaxId |    | Keyset Pagination用 |
+| Parameter     | Required | Description                      |
+|---------------|----------|----------------------------------|
+| tag           | ✅       | Tag name                         |
+| pageIndex     |          | Default: 1                       |
+| pageSize      |          | Default: 20 (max: 20)            |
+| lastPageMaxId |          | For Keyset Pagination            |
 
-------
+#### Pagination Design
 
-### ページング設計
+- Standard offset-based pagination
+- Keyset Pagination via `lastPageMaxId` for large datasets to prevent performance degradation
 
-- 通常ページング（OFFSETベース）
-- 大規模データ対応として lastPageMaxId によるKeyset Paginationも考慮
-
-パフォーマンス劣化を防ぐ設計とした。
-
-------
-
-### Response
+#### Response
 
 ```json
 {
@@ -216,155 +211,131 @@ GET /api/assets/search
 }
 ```
 
-# 5 DB設計
+---
 
-## 5.1 テーブル構成
+## 5. DB Design
 
-| No | テーブル名     | 論理名      | 概要         |
-|----|-----------|----------|------------|
-| 1  | asset     | アセット情報   | デジタルアセット管理 |
-| 2  | tag       | タグ情報     | タグマスタ管理    |
-| 3  | asset_tag | アセットタグ関連 | 多対多関連管理    |
+### 5.1 Table Overview
 
-## 5.2 テーブル定義
+| No | Table Name | Logical Name        | Description                    |
+|----|------------|---------------------|--------------------------------|
+| 1  | asset      | Asset Info          | Digital asset management       |
+| 2  | tag        | Tag Info            | Tag master management          |
+| 3  | asset_tag  | Asset-Tag Relation  | Many-to-many relationship      |
 
-### 5.2.1 asset テーブル
+---
 
-#### 概要
+### 5.2 Table Definitions
 
-デジタルアセット情報およびAIタグ付与状態を管理するテーブル。
+#### 5.2.1 `asset` Table
 
-#### カラム定義
+Manages digital asset information and AI tag assignment status.
 
-| No | カラム名               | 型            | PK | NN | 初期値               | 説明       |
-|----|--------------------|--------------|----|----|-------------------|----------|
-| 1  | id                 | BIGINT       | ○  | ○  | AUTO_INCREMENT    | アセットID   |
-| 2  | title              | VARCHAR(255) |    | ○  |                   | アセットタイトル |
-| 3  | file_path          | VARCHAR(500) |    | ○  |                   | ファイル保存パス |
-| 4  | ai_tag_status      | VARCHAR(20)  |    | ○  | PENDING           | AIタグ付与状態 |
-| 5  | ai_tag_retry_count | INT          |    | ○  | 0                 | リトライ回数   |
-| 6  | ai_tag_fail_reason | VARCHAR(500) |    |    | ''                | 失敗理由     |
-| 7  | create_time        | TIMESTAMP    |    | ○  | CURRENT_TIMESTAMP | 作成日時     |
-| 8  | update_time        | TIMESTAMP    |    |    | NULL              | 更新日時     |
-| 9  | delete_time        | TIMESTAMP    |    |    | NULL              | 論理削除日時   |
-| 10 | deleted            | BOOLEAN      |    | ○  | FALSE             | 論理削除フラグ  |
+| No | Column             | Type         | PK | NN | Default           | Description           |
+|----|--------------------|--------------|----|----|--------------------|----------------------|
+| 1  | id                 | BIGINT       | ✅ | ✅ | AUTO_INCREMENT     | Asset ID             |
+| 2  | title              | VARCHAR(255) |    | ✅ |                    | Asset title          |
+| 3  | file_path          | VARCHAR(500) |    | ✅ |                    | File storage path    |
+| 4  | ai_tag_status      | VARCHAR(20)  |    | ✅ | PENDING            | AI tag status        |
+| 5  | ai_tag_retry_count | INT          |    | ✅ | 0                  | Retry count          |
+| 6  | ai_tag_fail_reason | VARCHAR(500) |    |    | ''                 | Failure reason       |
+| 7  | create_time        | TIMESTAMP    |    | ✅ | CURRENT_TIMESTAMP  | Created at           |
+| 8  | update_time        | TIMESTAMP    |    |    | NULL               | Updated at           |
+| 9  | delete_time        | TIMESTAMP    |    |    | NULL               | Soft-deleted at      |
+| 10 | deleted            | BOOLEAN      |    | ✅ | FALSE              | Soft-delete flag     |
 
-------
+##### AI Status Transitions
 
-#### AI状態遷移
+| Status  | Description           |
+|---------|-----------------------|
+| PENDING | Awaiting tag assignment |
+| SUCCESS | Tag assignment succeeded |
+| FAILED  | Tag assignment failed  |
 
-| 状態      | 説明     |
-|---------|--------|
-| PENDING | タグ付与待ち |
-| SUCCESS | タグ付与成功 |
-| FAILED  | タグ付与失敗 |
+##### Retry Control Spec
 
-------
+- Target: assets with `FAILED` status and `ai_tag_retry_count < max (2)`
+- Re-executed by the scheduled batch (XXL-Job)
+- `ai_tag_retry_count` is incremented on each retry
 
-#### リトライ制御仕様
+##### Index Design
 
-- FAILED 状態
-- ai_tag_retry_count < 指定回数（最大2回）
-- 定期バッチ（XXL-Job）により再実行
-- 再実行時に ai_tag_retry_count を +1 更新
+| Index Name    | Columns                                        | Purpose                      |
+|---------------|------------------------------------------------|------------------------------|
+| idx_tag_retry | (ai_tag_status, ai_tag_retry_count, deleted)  | Speed up retry target queries |
 
-------
+---
 
-#### インデックス設計
+#### 5.2.2 `tag` Table
 
-| インデックス名       | カラム                                          | 目的          |
-|---------------|----------------------------------------------|-------------|
-| idx_tag_retry | (ai_tag_status, ai_tag_retry_count, deleted) | リトライ対象検索高速化 |
+Manages tag master information.
 
-------
+| No | Column      | Type         | PK | NN | Default           | Description        |
+|----|-------------|--------------|----|----|--------------------|--------------------|
+| 1  | id          | BIGINT       | ✅ | ✅ | AUTO_INCREMENT     | Tag ID             |
+| 2  | name        | VARCHAR(100) |    | ✅ |                    | Tag name (unique)  |
+| 3  | category    | VARCHAR(100) |    |    | ''                 | Category           |
+| 4  | create_time | TIMESTAMP    |    |    | CURRENT_TIMESTAMP  | Created at         |
+| 5  | delete_time | TIMESTAMP    |    |    | NULL               | Soft-deleted at    |
+| 6  | deleted     | BOOLEAN      |    | ✅ | FALSE              | Soft-delete flag   |
 
-### 5.2.2 tag テーブル
+##### Index Design
 
-#### 概要
+| Index Name       | Columns          | Purpose             |
+|------------------|------------------|---------------------|
+| idx_name_deleted | (name, deleted)  | Speed up tag search |
 
-タグマスタ情報を管理する。
+---
 
-#### カラム定義
+#### 5.2.3 `asset_tag` Table
 
-| No | カラム名        | 型            | PK | NN | 初期値               | 説明         |
-|----|-------------|--------------|----|----|-------------------|------------|
-| 1  | id          | BIGINT       | ○  | ○  | AUTO_INCREMENT    | タグID       |
-| 2  | name        | VARCHAR(100) |    | ○  |                   | タグ名称（ユニーク） |
-| 3  | category    | VARCHAR(100) |    |    | ''                | カテゴリ       |
-| 4  | create_time | TIMESTAMP    |    |    | CURRENT_TIMESTAMP | 作成日時       |
-| 5  | delete_time | TIMESTAMP    |    |    | NULL              | 論理削除日時     |
-| 6  | deleted     | BOOLEAN      |    | ○  | FALSE             | 論理削除フラグ    |
+Junction table managing the many-to-many relationship between Asset and Tag.
 
-------
+| No | Column           | Type        | PK | NN | Default           | Description                |
+|----|------------------|-------------|----|----|-------------------|----------------------------|
+| 1  | id               | BIGINT      | ✅ | ✅ | AUTO_INCREMENT    | Primary key                |
+| 2  | asset_id         | BIGINT      |    | ✅ |                   | Asset ID                   |
+| 3  | tag_id           | BIGINT      |    | ✅ |                   | Tag ID                     |
+| 4  | source           | VARCHAR(20) |    | ✅ |                   | Tag source (USER / AI)     |
+| 5  | confidence_score | DOUBLE      |    |    |                   | AI confidence (0.0 ~ 1.0)  |
+| 6  | create_time      | TIMESTAMP   |    | ✅ | CURRENT_TIMESTAMP | Created at                 |
+| 7  | delete_time      | TIMESTAMP   |    |    | NULL              | Soft-deleted at            |
+| 8  | deleted          | BOOLEAN     |    | ✅ | FALSE             | Soft-delete flag           |
 
-#### インデックス設計
+##### Index Design
 
-| インデックス名          | カラム             | 目的      |
-|------------------|-----------------|---------|
-| idx_name_deleted | (name, deleted) | タグ検索高速化 |
+| Index Name       | Columns                        | Purpose                      |
+|------------------|--------------------------------|------------------------------|
+| idx_tag_asset_id | (tag_id, asset_id, deleted)   | Speed up tag → asset queries |
+| idx_asset_id     | (asset_id, deleted)           | Speed up asset → tag queries |
 
-------
+---
 
-### 5.2.3 asset_tag テーブル
-
-#### 概要
-
-Asset と Tag の多対多関係を管理する中間テーブル。
-
-------
-
-#### カラム定義
-
-| No | カラム名             | 型           | PK | NN | 初期値               | 説明               |
-|----|------------------|-------------|----|----|-------------------|------------------|
-| 1  | id               | BIGINT      | ○  | ○  | AUTO_INCREMENT    | 主キー              |
-| 2  | asset_id         | BIGINT      |    | ○  |                   | アセットID           |
-| 3  | tag_id           | BIGINT      |    | ○  |                   | タグID             |
-| 4  | source           | VARCHAR(20) |    | ○  |                   | タグ付与元（USER / AI） |
-| 5  | confidence_score | DOUBLE      |    |    |                   | AI信頼度（0.0〜1.0）   |
-| 6  | create_time      | TIMESTAMP   |    | ○  | CURRENT_TIMESTAMP | 作成日時             |
-| 7  | delete_time      | TIMESTAMP   |    |    | NULL              | 論理削除日時           |
-| 8  | deleted          | BOOLEAN     |    | ○  | FALSE             | 論理削除フラグ          |
-
-------
-
-#### インデックス設計
-
-| インデックス名          | カラム                         | 目的           |
-|------------------|-----------------------------|--------------|
-| idx_tag_asset_id | (tag_id, asset_id, deleted) | タグ→アセット検索高速化 |
-| idx_asset_id     | (asset_id, deleted)         | アセット→タグ検索高速化 |
-
-------
-
-### 5.3 ER関係
+### 5.3 ER Relationship
 
 ```
-Asset（1）—（n）Asset_Tag（n）—（1）Tag
-
+Asset (1) — (n) Asset_Tag (n) — (1) Tag
 ```
 
-Asset と Tag は多対多関係。
+Asset and Tag have a many-to-many relationship managed through the `asset_tag` junction table.
 
-------
+---
 
-# 6 実行条件
+## 6. Running the Project
 
-## 6.1 実行環境
+### 6.1 Environment Requirements
 
-本プロジェクトの基本実行環境は以下の通り。
+| Item            | Requirement              |
+|-----------------|--------------------------|
+| Java            | 17+                      |
+| Maven           | 3.8+                     |
+| Ollama          | llama3.2-vision          |
+| Message Queue   | RocketMQ (if enabled)    |
+| Scheduled Tasks | XXL-Job (if enabled)     |
 
-| 項目       | 内容                |
-|----------|-------------------|
-| Java     | 17 以上             |
-| Maven    | 3.8 以上            |
-| Ollama   | llama3.2-vision   |
-| メッセージキュー | RocketMQ（利用時のみ必要） |
-| 定期タスク    | XXL-Job（利用時のみ必要）  |
+### 6.2 Production Configuration
 
-## 6.2 本番想定構成
-
-```
+```yaml
 config:
   ai:
     method: spring
@@ -373,90 +344,79 @@ config:
   task: xxl
 ```
 
-### 動作内容
+This configuration enables:
+- AI integration via Spring AI
+- Async processing via RocketMQ
+- Retry control via XXL-Job
+- Production DB (MySQL or equivalent RDB)
 
-- AI連携：Spring AI
-- 非同期処理：RocketMQ
-- リトライ制御：XXL-Job
-- DB：MySQL等のRDB想定
+---
 
-スケーラビリティおよび耐障害性を考慮した構成。
+### 6.3 Configuration Options
 
-------
+#### ① AI Call Method
 
-## 6.3 設定切替項目
-
-本プロジェクトでは、以下の設定により動作方式を切り替えることが可能。
-
-------
-
-### ① AI呼び出し方式
-
-```
+```yaml
 config:
   ai:
     method: spring
 ```
 
-| 設定値    | 説明                   |
-|--------|----------------------|
-| mock   | モック実装                |
-| http   | HTTPクライアント実装         |
-| spring | Spring AI経由実装（デフォルト） |
+| Value  | Description                           |
+|--------|---------------------------------------|
+| mock   | Mock implementation                   |
+| http   | HTTP client implementation            |
+| spring | Spring AI implementation (default)    |
 
-------
+#### ② Tag Assignment Event Method
 
-### ② タグ付与イベント送信方式
-
-```
+```yaml
 config:
   tag:
     add: event
 ```
 
-| 設定値   | 説明                             |
-|-------|--------------------------------|
-| event | Spring ApplicationEvent（デフォルト） |
-| mq    | RocketMQ                       |
+| Value | Description                                  |
+|-------|----------------------------------------------|
+| event | Spring ApplicationEvent (default)            |
+| mq    | RocketMQ (async via message queue)           |
 
-mq を指定した場合、タグ付与処理はRocketMQ経由で非同期実行される。
+#### ③ Scheduled Task Method
 
-### ③ 定期タスク実行方式
-
-```
+```yaml
 config:
   task: xxl
 ```
 
-| 設定値 | 説明               |
-|-----|------------------|
-| 未設定 | 無効       （デフォルト） |
-| xxl | XXL-Job利用        |
+| Value      | Description              |
+|------------|--------------------------|
+| (not set)  | Disabled (default)       |
+| xxl        | XXL-Job                  |
 
-XXL-Jobを利用する場合は、管理画面でジョブ登録が必要。
+> When using XXL-Job, job registration in the admin console is required.
 
-------
+---
 
-# 7. 設計上の工夫
+## 7. Design Highlights
 
-- DTOとEntityの責務分離
-- MapStructによる型安全な変換処理
-- Validationによる入力値検証
-- 論理削除設計の採用
-- AI処理状態の明確化
-- 非同期リトライ機構の設計
-- レイヤ分離による保守性向上
-- 設定による実行方法を切り替え
-- 共通レスポンス構造の統一
-- グローバル例外ハンドリングによるエラーハンドリングの一元化
-- 外部複数API連携の段階分離設計による障害影響局所化
+- Clear separation of DTO and Entity responsibilities
+- Type-safe object mapping with MapStruct
+- Input validation via Spring Validation
+- Soft-delete design adopted throughout
+- Explicit AI processing status management
+- Async retry mechanism design
+- Layer separation for improved maintainability
+- Runtime behavior switchable via configuration
+- Unified common response structure
+- Centralized error handling via global exception handler
+- Staged integration design for multiple external APIs to isolate failure impact
 
-# 8. 将来拡張
+---
 
-- S3等の外部ストレージ連携対応
-- Redisによるキャッシュ最適化
-- Elasticsearchによる全文検索機能強化
-- テナント分離機構の導入によるマルチテナント対応
-- Asset種別管理機能の追加（画像・動画・文書対応）
+## 8. Future Extensions
 
-
+- External storage integration (e.g., Amazon S3)
+- Cache optimization with Redis
+- Full-text search enhancement with Elasticsearch
+- Multi-tenant support with tenant isolation mechanism
+- Asset type management (images, videos, documents)
